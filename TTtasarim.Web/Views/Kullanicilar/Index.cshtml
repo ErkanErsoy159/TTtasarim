@@ -1,0 +1,36 @@
+﻿@model List<TTtasarim.Web.Models.KullaniciViewModel>
+
+@{
+    ViewData["Title"] = "Kullanıcılar";
+}
+
+<h2 class="mt-4 mb-3">Kullanıcı Listesi</h2>
+
+@if (ViewBag.Hata != null)
+{
+    <div class="alert alert-danger">@ViewBag.Hata</div>
+}
+else
+{
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Id</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Oluşturulma</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var kullanici in Model)
+            {
+                <tr>
+                    <td>@kullanici.Id</td>
+                    <td>@kullanici.Email</td>
+                    <td>@kullanici.UserType</td>
+                    <td>@kullanici.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,38 @@
+﻿@model List<TTtasarim.Web.Models.BayiViewModel>
+
+@{
+    ViewData["Title"] = "Bayiler";
+}
+
+<h2 class="mt-4 mb-3">Bayi Listesi</h2>
+
+@if (ViewBag.Hata != null)
+{
+    <div class="alert alert-danger">@ViewBag.Hata</div>
+}
+else
+{
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Id</th>
+                <th>Kodu</th>
+                <th>Adı</th>
+                <th>Durum</th>
+                <th>Oluşturulma</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bayi in Model)
+            {
+                <tr>
+                    <td>@bayi.Id</td>
+                    <td>@bayi.Code</td>
+                    <td>@bayi.Name</td>
+                    <td>@bayi.Status</td>
+                    <td>@bayi.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
