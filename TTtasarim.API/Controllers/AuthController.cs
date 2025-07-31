@@ -37,6 +37,7 @@ namespace TTtasarim.API.Controllers
             }
 
 
+            // Şifre doğrulama (TODO: BCrypt ile güvenli hale getir)
             if (user.Password != request.Password)
             {
                 return Unauthorized("Şifre eşleşmedi");

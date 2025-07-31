@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TTtasarim.API.Data;
 
@@ -11,9 +12,11 @@ using TTtasarim.API.Data;
 namespace TTtasarim.API.Migrations
 {
     [DbContext(typeof(TTtasarimDbContext))]
-    partial class TTtasarimDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250730141047_AddNewAdminAndNormalUser")]
+    partial class AddNewAdminAndNormalUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,28 +49,28 @@ namespace TTtasarim.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000020"),
+                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
                             Code = "TEDAS",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Trakya Elektrik Dağıtım A.Ş."
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000021"),
+                            Id = new Guid("55555555-5555-5555-5555-555555555555"),
                             Code = "IGDAS",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "İstanbul Gaz Dağıtım A.Ş."
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000022"),
+                            Id = new Guid("66666666-6666-6666-6666-666666666666"),
                             Code = "ISKI",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "İstanbul Su ve Kanalizasyon İdaresi"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000023"),
+                            Id = new Guid("77777777-7777-7777-7777-777777777777"),
                             Code = "TTNET",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Türk Telekom"
@@ -99,10 +102,10 @@ namespace TTtasarim.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000030"),
+                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             CurrentValue = 1000.00m,
-                            DealerId = new Guid("00000000-0000-0000-0000-000000000010")
+                            DealerId = new Guid("22222222-2222-2222-2222-222222222222")
                         });
                 });
 
@@ -161,10 +164,10 @@ namespace TTtasarim.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000010"),
-                            Code = "BAY007",
+                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                            Code = "BAY001",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Antalya Bayisi",
+                            Name = "Test Bayisi",
                             Status = "aktif"
                         });
                 });
@@ -209,10 +212,10 @@ namespace TTtasarim.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000100"),
-                            AccessNo = "5555555555",
+                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                            AccessNo = "5551234567",
                             Amount = 250.50m,
-                            CompanyId = new Guid("00000000-0000-0000-0000-000000000020"),
+                            CompanyId = new Guid("44444444-4444-4444-4444-444444444444"),
                             CreatedAt = new DateTime(2025, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Elektrik Faturası - Ocak 2025",
                             DueDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -220,10 +223,10 @@ namespace TTtasarim.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000101"),
-                            AccessNo = "5555555555",
+                            Id = new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                            AccessNo = "5551234567",
                             Amount = 180.75m,
-                            CompanyId = new Guid("00000000-0000-0000-0000-000000000021"),
+                            CompanyId = new Guid("55555555-5555-5555-5555-555555555555"),
                             CreatedAt = new DateTime(2025, 1, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Doğalgaz Faturası - Ocak 2025",
                             DueDate = new DateTime(2025, 2, 10, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -231,10 +234,10 @@ namespace TTtasarim.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000102"),
-                            AccessNo = "5555555555",
+                            Id = new Guid("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+                            AccessNo = "5551234567",
                             Amount = 95.30m,
-                            CompanyId = new Guid("00000000-0000-0000-0000-000000000022"),
+                            CompanyId = new Guid("66666666-6666-6666-6666-666666666666"),
                             CreatedAt = new DateTime(2025, 1, 5, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Su Faturası - Ocak 2025",
                             DueDate = new DateTime(2025, 2, 5, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -242,10 +245,10 @@ namespace TTtasarim.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000103"),
-                            AccessNo = "5555555555",
+                            Id = new Guid("dddddddd-dddd-dddd-dddd-dddddddddddd"),
+                            AccessNo = "2129876543",
                             Amount = 320.00m,
-                            CompanyId = new Guid("00000000-0000-0000-0000-000000000023"),
+                            CompanyId = new Guid("77777777-7777-7777-7777-777777777777"),
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "İnternet + Telefon Faturası - Ocak 2025",
                             DueDate = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -253,10 +256,10 @@ namespace TTtasarim.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000104"),
-                            AccessNo = "5555555555",
+                            Id = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
+                            AccessNo = "5559876543",
                             Amount = 420.80m,
-                            CompanyId = new Guid("00000000-0000-0000-0000-000000000020"),
+                            CompanyId = new Guid("44444444-4444-4444-4444-444444444444"),
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Elektrik Faturası - Büyük Tüketici",
                             DueDate = new DateTime(2025, 1, 28, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -342,13 +345,33 @@ namespace TTtasarim.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000001"),
+                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@tttasarim.com",
                             GSM = "5555555555",
                             Password = "Admin123!",
                             UserType = "admin",
                             Username = "admin"
+                        },
+                        new
+                        {
+                            Id = new Guid("12121212-1212-1212-1212-121212121212"),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "admin@ttortam.com",
+                            GSM = "5551234567",
+                            Password = "admin123",
+                            UserType = "admin",
+                            Username = "admin2"
+                        },
+                        new
+                        {
+                            Id = new Guid("13131313-1313-1313-1313-131313131313"),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "mehmet@ttortam.com",
+                            GSM = "5559876543",
+                            Password = "123",
+                            UserType = "normal",
+                            Username = "mehmet"
                         });
                 });
 
@@ -378,10 +401,10 @@ namespace TTtasarim.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000040"),
+                            Id = new Guid("88888888-8888-8888-8888-888888888888"),
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DealerId = new Guid("00000000-0000-0000-0000-000000000010"),
-                            UserId = new Guid("00000000-0000-0000-0000-000000000001")
+                            DealerId = new Guid("22222222-2222-2222-2222-222222222222"),
+                            UserId = new Guid("11111111-1111-1111-1111-111111111111")
                         });
                 });
 

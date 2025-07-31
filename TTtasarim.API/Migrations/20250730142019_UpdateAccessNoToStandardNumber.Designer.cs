@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TTtasarim.API.Data;
 
@@ -11,9 +12,11 @@ using TTtasarim.API.Data;
 namespace TTtasarim.API.Migrations
 {
     [DbContext(typeof(TTtasarimDbContext))]
-    partial class TTtasarimDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250730142019_UpdateAccessNoToStandardNumber")]
+    partial class UpdateAccessNoToStandardNumber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,7 +167,7 @@ namespace TTtasarim.API.Migrations
                             Id = new Guid("00000000-0000-0000-0000-000000000010"),
                             Code = "BAY007",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Antalya Bayisi",
+                            Name = " Bayisi",
                             Status = "aktif"
                         });
                 });
@@ -349,6 +352,26 @@ namespace TTtasarim.API.Migrations
                             Password = "Admin123!",
                             UserType = "admin",
                             Username = "admin"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "admin@ttortam.com",
+                            GSM = "5551234567",
+                            Password = "admin123",
+                            UserType = "admin",
+                            Username = "admin2"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "mehmet@ttortam.com",
+                            GSM = "5559876543",
+                            Password = "123",
+                            UserType = "normal",
+                            Username = "mehmet"
                         });
                 });
 

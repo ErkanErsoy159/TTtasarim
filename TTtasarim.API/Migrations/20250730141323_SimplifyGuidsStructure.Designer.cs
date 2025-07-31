@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TTtasarim.API.Data;
 
@@ -11,9 +12,11 @@ using TTtasarim.API.Data;
 namespace TTtasarim.API.Migrations
 {
     [DbContext(typeof(TTtasarimDbContext))]
-    partial class TTtasarimDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250730141323_SimplifyGuidsStructure")]
+    partial class SimplifyGuidsStructure
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -162,9 +165,9 @@ namespace TTtasarim.API.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000010"),
-                            Code = "BAY007",
+                            Code = "BAY001",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Antalya Bayisi",
+                            Name = "Test Bayisi",
                             Status = "aktif"
                         });
                 });
@@ -210,7 +213,7 @@ namespace TTtasarim.API.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000100"),
-                            AccessNo = "5555555555",
+                            AccessNo = "5551234567",
                             Amount = 250.50m,
                             CompanyId = new Guid("00000000-0000-0000-0000-000000000020"),
                             CreatedAt = new DateTime(2025, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -221,7 +224,7 @@ namespace TTtasarim.API.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000101"),
-                            AccessNo = "5555555555",
+                            AccessNo = "5551234567",
                             Amount = 180.75m,
                             CompanyId = new Guid("00000000-0000-0000-0000-000000000021"),
                             CreatedAt = new DateTime(2025, 1, 10, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -232,7 +235,7 @@ namespace TTtasarim.API.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000102"),
-                            AccessNo = "5555555555",
+                            AccessNo = "5551234567",
                             Amount = 95.30m,
                             CompanyId = new Guid("00000000-0000-0000-0000-000000000022"),
                             CreatedAt = new DateTime(2025, 1, 5, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -243,7 +246,7 @@ namespace TTtasarim.API.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000103"),
-                            AccessNo = "5555555555",
+                            AccessNo = "2129876543",
                             Amount = 320.00m,
                             CompanyId = new Guid("00000000-0000-0000-0000-000000000023"),
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -254,7 +257,7 @@ namespace TTtasarim.API.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000104"),
-                            AccessNo = "5555555555",
+                            AccessNo = "5559876543",
                             Amount = 420.80m,
                             CompanyId = new Guid("00000000-0000-0000-0000-000000000020"),
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -349,6 +352,26 @@ namespace TTtasarim.API.Migrations
                             Password = "Admin123!",
                             UserType = "admin",
                             Username = "admin"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "admin@ttortam.com",
+                            GSM = "5551234567",
+                            Password = "admin123",
+                            UserType = "admin",
+                            Username = "admin2"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "mehmet@ttortam.com",
+                            GSM = "5559876543",
+                            Password = "123",
+                            UserType = "normal",
+                            Username = "mehmet"
                         });
                 });
 
