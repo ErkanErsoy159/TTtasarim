@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TTtasarim.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
 <body>
     <header>
@@ -31,12 +32,27 @@
                             if (userRole == "admin")
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Bayiler" asp-action="Index">Bayiler</a>
+                                    <a class="nav-link" asp-controller="Bayiler" asp-action="Index">
+                                        <i class="fas fa-store"></i> Bayiler
+                                    </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Kullanicilar" asp-action="Index">Kullanıcılar</a>
+                                    <a class="nav-link" asp-controller="Kullanicilar" asp-action="Index">
+                                        <i class="fas fa-users"></i> Kullanıcılar
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Raporlar" asp-action="Index">
+                                        <i class="fas fa-chart-bar"></i> Raporlar
+                                    </a>
                                 </li>
                             }
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Faturalar" asp-action="Index">
+                                    <i class="fas fa-file-invoice"></i> Faturalar
+                                </a>
+                            </li>
 
                             <li class="nav-item">
                                 <a class="nav-link text-danger" asp-controller="Auth" asp-action="Logout">Çıkış Yap</a>

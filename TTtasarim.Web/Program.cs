@@ -1,6 +1,6 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Razor views için
+// Razor views iï¿½in
 builder.Services.AddControllersWithViews();
 
 // HttpClient servisi
@@ -16,7 +16,7 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Middleware sýralamasý
+// Middleware sï¿½ralamasï¿½
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -32,9 +32,9 @@ app.UseSession(); // burada olmak zorunda
 
 app.UseAuthorization();
 
-// Varsayýlan route (ilk açýlan sayfa: Giriþ)
+// Varsayï¿½lan route (ilk aï¿½ï¿½lan sayfa: Giriï¿½)
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Bayiler}/{action=Index}/{id?}");
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();

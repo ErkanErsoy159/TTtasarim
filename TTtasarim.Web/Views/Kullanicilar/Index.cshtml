@@ -1,36 +1,498 @@
 ﻿@model List<TTtasarim.Web.Models.KullaniciViewModel>
 
 @{
-    ViewData["Title"] = "Kullanıcılar";
+    ViewData["Title"] = "Kullanıcı Yönetimi";
 }
 
-<h2 class="mt-4 mb-3">Kullanıcı Listesi</h2>
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-users"></i> Kullanıcı Yönetimi</h2>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i class="fas fa-user-plus"></i> Yeni Kullanıcı Ekle
+                </button>
+            </div>
 
-@if (ViewBag.Hata != null)
-{
-    <div class="alert alert-danger">@ViewBag.Hata</div>
-}
-else
-{
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Id</th>
-                <th>Email</th>
-                <th>Rol</th>
-                <th>Oluşturulma</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var kullanici in Model)
+            <!-- Hata Mesajları -->
+            @if (ViewBag.Hata != null)
             {
-                <tr>
-                    <td>@kullanici.Id</td>
-                    <td>@kullanici.Email</td>
-                    <td>@kullanici.UserType</td>
-                    <td>@kullanici.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
-                </tr>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> @ViewBag.Hata
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
             }
-        </tbody>
-    </table>
+
+            <!-- Success/Error Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- Kullanıcı Listesi -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Kayıtlı Kullanıcılar</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Kullanıcı Adı</th>
+                                        <th>Email</th>
+                                        <th>Telefon</th>
+                                        <th>Rol</th>
+                                        <th>Atanmış Bayi</th>
+                                        <th>Oluşturulma</th>
+                                        <th width="250">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var kullanici in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong class="text-primary">@kullanici.Username</strong>
+                                            </td>
+                                            <td>@kullanici.Email</td>
+                                            <td>@kullanici.GSM</td>
+                                            <td>
+                                                @if (kullanici.UserType == "admin")
+                                                {
+                                                    <span class="badge bg-danger">Admin</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-primary">Normal</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (kullanici.HasDealerAssignment)
+                                                {
+                                                    <span class="badge bg-info">@kullanici.AssignedDealerName</span>
+                                                    <small class="text-muted d-block">(@kullanici.AssignedDealerCode)</small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">Atama Yok</span>
+                                                }
+                                            </td>
+                                            <td>@kullanici.CreatedAt.ToString("dd.MM.yyyy")</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button type="button" class="btn btn-sm btn-primary" 
+                                                            onclick="editUser('@kullanici.Id', '@kullanici.Username', '@kullanici.Email', '@kullanici.GSM', '@kullanici.UserType')">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-info" 
+                                                            onclick="assignDealer('@kullanici.Id', '@kullanici.Username', '@kullanici.AssignedDealerId')">
+                                                        <i class="fas fa-building"></i>
+                                                    </button>
+                                                    @if (kullanici.HasDealerAssignment)
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-warning" 
+                                                                onclick="removeDealer('@kullanici.Id', '@kullanici.Username')">
+                                                            <i class="fas fa-unlink"></i>
+                                                        </button>
+                                                    }
+                                                    @if (kullanici.UserType != "admin")
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                                onclick="deleteUser('@kullanici.Id', '@kullanici.Username')">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Henüz kullanıcı kaydı bulunmuyor</h5>
+                            <p class="text-muted">Yeni kullanıcı eklemek için yukarıdaki butonu kullanın.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Yeni Kullanıcı Ekleme Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus"></i> Yeni Kullanıcı Ekle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label for="addUsername" class="form-label">Kullanıcı Adı *</label>
+                        <input type="text" class="form-control" id="addUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addEmail" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="addEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addPassword" class="form-label">Şifre *</label>
+                        <input type="password" class="form-control" id="addPassword" required>
+                        <div class="form-text">Minimum 6 karakter</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addGSM" class="form-label">Telefon</label>
+                        <input type="text" class="form-control" id="addGSM" placeholder="5551234567">
+                    </div>
+                    <div class="mb-3">
+                        <label for="addUserType" class="form-label">Rol</label>
+                        <select class="form-select" id="addUserType">
+                            <option value="normal">Normal Kullanıcı</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addDealerAssignment" class="form-label">Bayi Ataması (İsteğe Bağlı)</label>
+                        <select class="form-select" id="addDealerAssignment">
+                            <option value="">-- Bayi Seçin --</option>
+                            @foreach (var bayi in (ViewBag.Bayiler as List<TTtasarim.Web.Models.BayiViewModel>) ?? new List<TTtasarim.Web.Models.BayiViewModel>())
+                            {
+                                <option value="@bayi.Id">@bayi.Name (@bayi.Code)</option>
+                            }
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-success" onclick="addUser()">
+                    <i class="fas fa-save"></i> Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kullanıcı Düzenleme Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-edit"></i> Kullanıcı Düzenle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">Kullanıcı Adı *</label>
+                        <input type="text" class="form-control" id="editUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="editEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editGSM" class="form-label">Telefon</label>
+                        <input type="text" class="form-control" id="editGSM">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUserType" class="form-label">Rol</label>
+                        <select class="form-select" id="editUserType">
+                            <option value="normal">Normal Kullanıcı</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateUser()">
+                    <i class="fas fa-save"></i> Güncelle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bayi Atama Modal -->
+<div class="modal fade" id="assignDealerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-building"></i> Bayi Atama
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="assignDealerForm">
+                    <input type="hidden" id="assignUserId">
+                    <div class="mb-3">
+                        <label class="form-label">Kullanıcı</label>
+                        <input type="text" class="form-control" id="assignUserName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="assignDealerSelect" class="form-label">Bayi Seçin *</label>
+                        <select class="form-select" id="assignDealerSelect" required>
+                            <option value="">-- Bayi Seçin --</option>
+                            @foreach (var bayi in (ViewBag.Bayiler as List<TTtasarim.Web.Models.BayiViewModel>) ?? new List<TTtasarim.Web.Models.BayiViewModel>())
+                            {
+                                <option value="@bayi.Id">@bayi.Name (@bayi.Code) - @bayi.CurrentCredit.ToString("C", new System.Globalization.CultureInfo("tr-TR"))</option>
+                            }
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-info" onclick="submitDealerAssignment()">
+                    <i class="fas fa-link"></i> Bayiye Ata
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Yeni kullanıcı ekleme
+    function addUser() {
+        const username = $('#addUsername').val().trim();
+        const email = $('#addEmail').val().trim();
+        const password = $('#addPassword').val().trim();
+        const gsm = $('#addGSM').val().trim();
+        const userType = $('#addUserType').val();
+        const dealerAssignment = $('#addDealerAssignment').val();
+
+        if (!username || !email || !password) {
+            showAlert('danger', 'Kullanıcı adı, email ve şifre zorunludur!');
+            return;
+        }
+
+        if (password.length < 6) {
+            showAlert('danger', 'Şifre en az 6 karakter olmalıdır!');
+            return;
+        }
+
+        const data = {
+            Username: username,
+            Email: email,
+            Password: password,
+            GSM: gsm,
+            UserType: userType,
+            AssignedDealerId: dealerAssignment
+        };
+
+        $.ajax({
+            url: '@Url.Action("AddUser")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    $('#addUserModal').modal('hide');
+                    showAlert('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Bir hata oluştu!');
+            }
+        });
+    }
+
+    // Kullanıcı düzenleme modal açma
+    function editUser(id, username, email, gsm, userType) {
+        $('#editUserId').val(id);
+        $('#editUsername').val(username);
+        $('#editEmail').val(email);
+        $('#editGSM').val(gsm);
+        $('#editUserType').val(userType);
+        $('#editUserModal').modal('show');
+    }
+
+    // Kullanıcı güncelleme
+    function updateUser() {
+        const id = $('#editUserId').val();
+        const username = $('#editUsername').val().trim();
+        const email = $('#editEmail').val().trim();
+        const gsm = $('#editGSM').val().trim();
+        const userType = $('#editUserType').val();
+
+        if (!username || !email) {
+            showAlert('danger', 'Kullanıcı adı ve email zorunludur!');
+            return;
+        }
+
+        const data = {
+            Id: id,
+            Username: username,
+            Email: email,
+            GSM: gsm,
+            UserType: userType
+        };
+
+        $.ajax({
+            url: '@Url.Action("UpdateUser")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    $('#editUserModal').modal('hide');
+                    showAlert('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Bir hata oluştu!');
+            }
+        });
+    }
+
+    // Bayi atama modal açma
+    function assignDealer(userId, username, currentDealerId) {
+        $('#assignUserId').val(userId);
+        $('#assignUserName').val(username);
+        $('#assignDealerSelect').val(currentDealerId || '');
+        $('#assignDealerModal').modal('show');
+    }
+
+    // Bayi atama
+    function submitDealerAssignment() {
+        const userId = $('#assignUserId').val();
+        const dealerId = $('#assignDealerSelect').val();
+
+        if (!dealerId) {
+            showAlert('danger', 'Lütfen bir bayi seçin!');
+            return;
+        }
+
+        const data = {
+            UserId: userId,
+            DealerId: dealerId
+        };
+
+        $.ajax({
+            url: '@Url.Action("AssignDealer")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    $('#assignDealerModal').modal('hide');
+                    showAlert('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Bir hata oluştu!');
+            }
+        });
+    }
+
+    // Bayi ataması kaldırma
+    function removeDealer(userId, username) {
+        if (!confirm(`"${username}" kullanıcısının bayi atamasını kaldırmak istediğinizden emin misiniz?`)) {
+            return;
+        }
+
+        const data = { UserId: userId };
+
+        $.ajax({
+            url: '@Url.Action("RemoveDealer")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Bir hata oluştu!');
+            }
+        });
+    }
+
+    // Kullanıcı silme
+    function deleteUser(id, username) {
+        if (!confirm(`"${username}" kullanıcısını silmek istediğinizden emin misiniz?`)) {
+            return;
+        }
+
+        const data = { Id: id };
+
+        $.ajax({
+            url: '@Url.Action("DeleteUser")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Bir hata oluştu!');
+            }
+        });
+    }
+
+    // Alert gösterme helper
+    function showAlert(type, message) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        $('#alertContainer').html(alertHtml);
+
+        // Auto dismiss after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 5000);
+    }
+
+    // Form resetleme
+    $('#addUserModal').on('hidden.bs.modal', function() {
+        $('#addUserForm')[0].reset();
+    });
+</script>
 }

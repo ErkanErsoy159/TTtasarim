@@ -1,38 +1,429 @@
 ﻿@model List<TTtasarim.Web.Models.BayiViewModel>
 
 @{
-    ViewData["Title"] = "Bayiler";
+    ViewData["Title"] = "Bayi Yönetimi";
 }
 
-<h2 class="mt-4 mb-3">Bayi Listesi</h2>
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-store"></i> Bayi Yönetimi</h2>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addDealerModal">
+                    <i class="fas fa-plus"></i> Yeni Bayi Ekle
+                </button>
+            </div>
 
-@if (ViewBag.Hata != null)
-{
-    <div class="alert alert-danger">@ViewBag.Hata</div>
-}
-else
-{
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Id</th>
-                <th>Kodu</th>
-                <th>Adı</th>
-                <th>Durum</th>
-                <th>Oluşturulma</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var bayi in Model)
+            <!-- Hata Mesajları -->
+            @if (ViewBag.Hata != null)
             {
-                <tr>
-                    <td>@bayi.Id</td>
-                    <td>@bayi.Code</td>
-                    <td>@bayi.Name</td>
-                    <td>@bayi.Status</td>
-                    <td>@bayi.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
-                </tr>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> @ViewBag.Hata
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
             }
-        </tbody>
-    </table>
+
+            <!-- Success/Error Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- Bayi Listesi -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Kayıtlı Bayiler</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Bayi Kodu</th>
+                                        <th>Bayi Adı</th>
+                                        <th>Durum</th>
+                                        <th>Kredi Durumu</th>
+                                        <th>Mevcut Kredi</th>
+                                        <th>Oluşturulma</th>
+                                        <th width="200">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var bayi in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong class="text-primary">@bayi.Code</strong>
+                                            </td>
+                                            <td>@bayi.Name</td>
+                                            <td>
+                                                @if (bayi.Status == "aktif")
+                                                {
+                                                    <span class="badge bg-success">Aktif</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@bayi.Status</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (bayi.HasCredit)
+                                                {
+                                                    <span class="badge bg-info">Kredi Var</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">Kredi Yok</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <strong class="text-success">
+                                                    @bayi.CurrentCredit.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                                </strong>
+                                            </td>
+                                            <td>@bayi.CreatedAt.ToString("dd.MM.yyyy")</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button type="button" class="btn btn-sm btn-primary" 
+                                                            onclick="editDealer('@bayi.Id', '@bayi.Code', '@bayi.Name', '@bayi.Status')">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-info" 
+                                                            onclick="updateCredit('@bayi.Id', '@bayi.Name', @bayi.CurrentCredit)">
+                                                        <i class="fas fa-coins"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger" 
+                                                            onclick="deleteDealer('@bayi.Id', '@bayi.Name')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-store fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Henüz bayi kaydı bulunmuyor</h5>
+                            <p class="text-muted">Yeni bayi eklemek için yukarıdaki butonu kullanın.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Yeni Bayi Ekleme Modal -->
+<div class="modal fade" id="addDealerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus"></i> Yeni Bayi Ekle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addDealerForm">
+                    <div class="mb-3">
+                        <label for="addCode" class="form-label">Bayi Kodu *</label>
+                        <input type="text" class="form-control" id="addCode" required>
+                        <div class="form-text">Örn: BAY001, ANK001 vb.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addName" class="form-label">Bayi Adı *</label>
+                        <input type="text" class="form-control" id="addName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addStatus" class="form-label">Durum</label>
+                        <select class="form-select" id="addStatus">
+                            <option value="aktif">Aktif</option>
+                            <option value="pasif">Pasif</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-success" onclick="addDealer()">
+                    <i class="fas fa-save"></i> Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bayi Düzenleme Modal -->
+<div class="modal fade" id="editDealerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> Bayi Düzenle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editDealerForm">
+                    <input type="hidden" id="editId">
+                    <div class="mb-3">
+                        <label for="editCode" class="form-label">Bayi Kodu *</label>
+                        <input type="text" class="form-control" id="editCode" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editName" class="form-label">Bayi Adı *</label>
+                        <input type="text" class="form-control" id="editName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editStatus" class="form-label">Durum</label>
+                        <select class="form-select" id="editStatus">
+                            <option value="aktif">Aktif</option>
+                            <option value="pasif">Pasif</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateDealer()">
+                    <i class="fas fa-save"></i> Güncelle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kredi Güncelleme Modal -->
+<div class="modal fade" id="updateCreditModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-coins"></i> Kredi Güncelle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateCreditForm">
+                    <input type="hidden" id="creditDealerId">
+                    <div class="mb-3">
+                        <label class="form-label">Bayi</label>
+                        <input type="text" class="form-control" id="creditDealerName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="creditAmount" class="form-label">Yeni Kredi Tutarı *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₺</span>
+                            <input type="number" class="form-control" id="creditAmount" 
+                                   step="0.01" min="0" required>
+                        </div>
+                        <div class="form-text">Mevcut kredi: <span id="currentCreditAmount"></span></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-info" onclick="submitCreditUpdate()">
+                    <i class="fas fa-coins"></i> Kredi Güncelle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Yeni bayi ekleme
+    function addDealer() {
+        const code = $('#addCode').val().trim();
+        const name = $('#addName').val().trim();
+        const status = $('#addStatus').val();
+
+        if (!code || !name) {
+            showAlert('danger', 'Bayi kodu ve adı zorunludur!');
+            return;
+        }
+
+        const data = {
+            Code: code,
+            Name: name,
+            Status: status
+        };
+
+        $.ajax({
+            url: '@Url.Action("AddDealer")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    $('#addDealerModal').modal('hide');
+                    showAlert('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Bir hata oluştu!');
+            }
+        });
+    }
+
+    // Bayi düzenleme modal açma
+    function editDealer(id, code, name, status) {
+        $('#editId').val(id);
+        $('#editCode').val(code);
+        $('#editName').val(name);
+        $('#editStatus').val(status);
+        $('#editDealerModal').modal('show');
+    }
+
+    // Bayi güncelleme
+    function updateDealer() {
+        const id = $('#editId').val();
+        const code = $('#editCode').val().trim();
+        const name = $('#editName').val().trim();
+        const status = $('#editStatus').val();
+
+        if (!code || !name) {
+            showAlert('danger', 'Bayi kodu ve adı zorunludur!');
+            return;
+        }
+
+        const data = {
+            Id: id,
+            Code: code,
+            Name: name,
+            Status: status
+        };
+
+        $.ajax({
+            url: '@Url.Action("UpdateDealer")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    $('#editDealerModal').modal('hide');
+                    showAlert('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Bir hata oluştu!');
+            }
+        });
+    }
+
+    // Kredi güncelleme modal açma
+    function updateCredit(dealerId, dealerName, currentCredit) {
+        $('#creditDealerId').val(dealerId);
+        $('#creditDealerName').val(dealerName);
+        $('#creditAmount').val(currentCredit);
+        $('#currentCreditAmount').text('₺' + currentCredit.toLocaleString('tr-TR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }));
+        $('#updateCreditModal').modal('show');
+    }
+
+    // Kredi güncelleme
+    function submitCreditUpdate() {
+        const dealerId = $('#creditDealerId').val();
+        const amount = parseFloat($('#creditAmount').val());
+
+        if (isNaN(amount) || amount < 0) {
+            showAlert('danger', 'Geçerli bir tutar girin!');
+            return;
+        }
+
+        const data = {
+            DealerId: dealerId,
+            Amount: amount
+        };
+
+        $.ajax({
+            url: '@Url.Action("UpdateCredit")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    $('#updateCreditModal').modal('hide');
+                    showAlert('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Bir hata oluştu!');
+            }
+        });
+    }
+
+    // Bayi silme
+    function deleteDealer(id, name) {
+        if (!confirm(`"${name}" adlı bayiyi silmek istediğinizden emin misiniz?`)) {
+            return;
+        }
+
+        const data = { Id: id };
+
+        $.ajax({
+            url: '@Url.Action("DeleteDealer")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Bir hata oluştu!');
+            }
+        });
+    }
+
+    // Alert gösterme helper
+    function showAlert(type, message) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        $('#alertContainer').html(alertHtml);
+
+        // Auto dismiss after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 5000);
+    }
+
+    // Form resetleme
+    $('#addDealerModal').on('hidden.bs.modal', function() {
+        $('#addDealerForm')[0].reset();
+    });
+</script>
 }
