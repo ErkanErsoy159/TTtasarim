@@ -119,12 +119,12 @@ namespace TTtasarim.API.Controllers
                     Console.WriteLine($"Bayi {dealer.Name} için {userDealers.Count} kullanıcı ataması silindi");
                 }
 
-                // 3. Bayiye ait fatura transaction'larını kontrol et
+                // 3. Bayiye ait fatura transaction'larını sil
                 var invoiceTransactions = await _context.InvoiceTransactions.Where(it => it.DealerId == id).ToListAsync();
                 if (invoiceTransactions.Any())
                 {
-                    // Fatura transaction'ları varsa bayiyi silme, hata döndür
-                    return BadRequest($"Bu bayi silinemez. {invoiceTransactions.Count} adet fatura işlemi kaydı bulunuyor. Önce bu kayıtları temizleyin.");
+                    _context.InvoiceTransactions.RemoveRange(invoiceTransactions);
+                    Console.WriteLine($"Bayi {dealer.Name} için {invoiceTransactions.Count} fatura işlemi kaydı silindi");
                 }
 
                 // 4. Bayiyi sil
@@ -139,7 +139,8 @@ namespace TTtasarim.API.Controllers
                     message = "Bayi ve ilgili tüm kayıtlar başarıyla silindi",
                     dealerName = dealer.Name,
                     deletedCredits = credits.Count,
-                    deletedUserAssignments = userDealers.Count
+                    deletedUserAssignments = userDealers.Count,
+                    deletedInvoiceTransactions = invoiceTransactions.Count
                 });
             }
             catch (Exception ex)

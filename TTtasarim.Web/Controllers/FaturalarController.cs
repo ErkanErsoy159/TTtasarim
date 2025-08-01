@@ -24,102 +24,111 @@ namespace TTtasarim.Web.Controllers
             if (string.IsNullOrEmpty(token))
                 return RedirectToAction("Login", "Auth");
 
-            // Şirketleri API'den al
-            var companies = await GetCompaniesAsync();
-            ViewBag.Companies = companies;
-            ViewBag.ApiBaseUrl = _configuration["Api:BaseUrl"];
+            try
+            {
+                // Şirketleri ve kredi durumunu al
+                var companies = await GetCompaniesAsync();
+                var creditStatus = await GetCreditStatusAsync();
 
-            return View();
+                ViewBag.Companies = companies;
+                ViewBag.CreditStatus = creditStatus;
+                
+                return View();
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Hata = "Sayfa yüklenirken hata oluştu: " + ex.Message;
+                ViewBag.Companies = new List<CompanyViewModel>();
+                ViewBag.CreditStatus = null;
+                return View();
+            }
         }
 
         // AJAX ile fatura sorgulama
         [HttpPost]
-        public async Task<IActionResult> QueryInvoices(string companyId, string accessNo)
+        public async Task<IActionResult> QueryInvoices([FromBody] QueryInvoicesRequest request)
         {
             try
             {
-                if (string.IsNullOrEmpty(companyId) || string.IsNullOrEmpty(accessNo))
+                if (string.IsNullOrEmpty(request.CompanyId) || string.IsNullOrEmpty(request.AccessNo))
                 {
                     return Json(new { success = false, message = "Şirket ve abone numarası gerekli" });
                 }
 
                 var client = _clientFactory.CreateClient();
-                var apiUrl = _configuration["Api:BaseUrl"] + $"/api/invoices/query?companyId={companyId}&accessNo={accessNo}";
+                var apiUrl = _configuration["Api:BaseUrl"] + $"/api/invoices/query?companyId={request.CompanyId}&accessNo={request.AccessNo}";
                 var response = await client.GetAsync(apiUrl);
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = $"Fatura sorgulaması başarısız: {errorContent}" });
-                }
-
                 var json = await response.Content.ReadAsStringAsync();
-                
-                // Debug logging
-                Console.WriteLine($"API Response JSON: {json}");
-                
-                // JSON deserialize işleminde decimal formatting'i koruyalım
-                var settings = new JsonSerializerSettings
-                {
-                    FloatParseHandling = FloatParseHandling.Decimal,
-                    DateFormatHandling = DateFormatHandling.IsoDateFormat
-                };
-                
-                var invoices = JsonConvert.DeserializeObject<List<dynamic>>(json, settings);
-                
-                // Debug: Her fatura için amount değerini kontrol et
-                if (invoices != null)
-                {
-                    foreach (var invoice in invoices)
-                    {
-                        Console.WriteLine($"Web Controller - Fatura: {invoice.description}, Amount: {invoice.amount} (Type: {invoice.amount?.GetType()})");
-                    }
-                }
+                var result = JsonConvert.DeserializeObject<ApiResponse<List<InvoiceDto>>>(json);
 
-                return Json(new { success = true, data = invoices });
+                if (response.IsSuccessStatusCode && result?.Success == true)
+                {
+                    return Json(new { 
+                        success = true, 
+                        message = result.Message,
+                        data = result.Data 
+                    });
+                }
+                else
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = result?.Message ?? "Fatura sorgulaması başarısız" 
+                    });
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"QueryInvoices Error: {ex.Message}");
                 return Json(new { success = false, message = "Bir hata oluştu: " + ex.Message });
             }
         }
 
         // Fatura ödeme
         [HttpPost]
-        public async Task<IActionResult> PayInvoice(string invoiceId)
+        public async Task<IActionResult> PayInvoice([FromBody] PayInvoiceRequest request)
         {
             try
             {
                 var token = HttpContext.Session.GetString("JWT");
                 if (string.IsNullOrEmpty(token))
-                    return Json(new { success = false, message = "Oturum süresi dolmuş" });
+                    return Json(new { success = false, message = "Oturum süresi dolmuş, lütfen tekrar giriş yapın" });
+
+                if (string.IsNullOrEmpty(request.InvoiceId))
+                    return Json(new { success = false, message = "Geçersiz fatura ID" });
 
                 var client = _clientFactory.CreateClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var paymentRequest = new { InvoiceId = invoiceId };
+                var paymentRequest = new { InvoiceId = request.InvoiceId };
                 var json = JsonConvert.SerializeObject(paymentRequest);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var apiUrl = _configuration["Api:BaseUrl"] + "/api/invoices/pay";
                 var response = await client.PostAsync(apiUrl, content);
 
-                if (response.IsSuccessStatusCode)
+                var responseJson = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<dynamic>(responseJson);
+
+                if (response.IsSuccessStatusCode && result?.success == true)
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    dynamic result = JsonConvert.DeserializeObject(responseContent);
-                    
                     return Json(new { 
                         success = true, 
-                        message = "Fatura başarıyla ödendi!", 
-                        remainingCredit = result.remainingCredit 
+                        message = result.message?.ToString(),
+                        data = new {
+                            paidAmount = result.payment?.paidAmount,
+                            remainingCredit = result.payment?.remainingCredit,
+                            dealerName = result.dealer?.name,
+                            transactionId = result.payment?.transactionId
+                        }
                     });
                 }
                 else
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = errorContent });
+                    return Json(new { 
+                        success = false, 
+                        message = result?.message?.ToString() ?? "Ödeme işlemi başarısız" 
+                    });
                 }
             }
             catch (Exception ex)
@@ -128,7 +137,69 @@ namespace TTtasarim.Web.Controllers
             }
         }
 
-        // Şirketleri API'den çek
+        // Ödeme geçmişi
+        [HttpGet]
+        public async Task<IActionResult> PaymentHistory()
+        {
+            var token = HttpContext.Session.GetString("JWT");
+            if (string.IsNullOrEmpty(token))
+                return RedirectToAction("Login", "Auth");
+
+            try
+            {
+                var client = _clientFactory.CreateClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var apiUrl = _configuration["Api:BaseUrl"] + "/api/invoices/history";
+                var response = await client.GetAsync(apiUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject<ApiResponse<List<PaymentHistoryDto>>>(json);
+                    
+                    ViewBag.PaymentHistory = result?.Data ?? new List<PaymentHistoryDto>();
+                    ViewBag.Message = result?.Message;
+                }
+                else
+                {
+                    ViewBag.PaymentHistory = new List<PaymentHistoryDto>();
+                    ViewBag.Hata = "Ödeme geçmişi alınamadı";
+                }
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                ViewBag.PaymentHistory = new List<PaymentHistoryDto>();
+                ViewBag.Hata = "Bir hata oluştu: " + ex.Message;
+                return View();
+            }
+        }
+
+        // Kredi durumu (AJAX)
+        [HttpGet]
+        public async Task<IActionResult> GetCreditStatus()
+        {
+            try
+            {
+                var creditStatus = await GetCreditStatusAsync();
+                if (creditStatus != null)
+                {
+                    return Json(new { success = true, data = creditStatus });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Kredi durumu alınamadı" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Hata: " + ex.Message });
+            }
+        }
+
+        // Helper: Şirketleri API'den çek
         private async Task<List<CompanyViewModel>> GetCompaniesAsync()
         {
             try
@@ -140,7 +211,8 @@ namespace TTtasarim.Web.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    return JsonConvert.DeserializeObject<List<CompanyViewModel>>(json) ?? new List<CompanyViewModel>();
+                    var companies = JsonConvert.DeserializeObject<List<CompanyViewModel>>(json);
+                    return companies ?? new List<CompanyViewModel>();
                 }
             }
             catch
@@ -150,5 +222,112 @@ namespace TTtasarim.Web.Controllers
 
             return new List<CompanyViewModel>();
         }
+
+        // Helper: Kredi durumunu API'den çek
+        private async Task<CreditStatusDto?> GetCreditStatusAsync()
+        {
+            try
+            {
+                var token = HttpContext.Session.GetString("JWT");
+                if (string.IsNullOrEmpty(token))
+                    return null;
+
+                var client = _clientFactory.CreateClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var apiUrl = _configuration["Api:BaseUrl"] + "/api/invoices/credit-status";
+                var response = await client.GetAsync(apiUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject<ApiResponse<CreditStatusData>>(json);
+                    
+                    if (result?.Success == true && result.Data != null)
+                    {
+                        return new CreditStatusDto
+                        {
+                            DealerName = result.Data.Dealer?.Name ?? "",
+                            DealerCode = result.Data.Dealer?.Code ?? "",
+                            CurrentCredit = result.Data.Credit?.CurrentValue ?? 0,
+                            FormattedCredit = result.Data.Credit?.FormattedValue ?? "₺0,00"
+                        };
+                    }
+                }
+            }
+            catch
+            {
+                // Hata durumunda null döndür
+            }
+
+            return null;
+        }
+    }
+
+    // Request/Response models
+    public class QueryInvoicesRequest
+    {
+        public string CompanyId { get; set; } = string.Empty;
+        public string AccessNo { get; set; } = string.Empty;
+    }
+
+    public class PayInvoiceRequest
+    {
+        public string InvoiceId { get; set; } = string.Empty;
+    }
+
+    public class ApiResponse<T>
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public T? Data { get; set; }
+    }
+
+    public class InvoiceDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string AccessNo { get; set; } = string.Empty;
+        public string DueDate { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
+        public string CompanyId { get; set; } = string.Empty;
+    }
+
+    public class PaymentHistoryDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string AccessNo { get; set; } = string.Empty;
+        public string TransactionDate { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
+        public string DealerName { get; set; } = string.Empty;
+    }
+
+    public class CreditStatusDto
+    {
+        public string DealerName { get; set; } = string.Empty;
+        public string DealerCode { get; set; } = string.Empty;
+        public decimal CurrentCredit { get; set; }
+        public string FormattedCredit { get; set; } = string.Empty;
+    }
+
+    public class CreditStatusData
+    {
+        public DealerInfo? Dealer { get; set; }
+        public CreditInfo? Credit { get; set; }
+    }
+
+    public class DealerInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+    }
+
+    public class CreditInfo
+    {
+        public decimal CurrentValue { get; set; }
+        public string FormattedValue { get; set; } = string.Empty;
     }
 }

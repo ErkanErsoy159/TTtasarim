@@ -84,13 +84,13 @@ namespace TTtasarim.API.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<UserDealer>()
-                .HasOne<User>()
+                .HasOne(ud => ud.User)
                 .WithMany()
                 .HasForeignKey(ud => ud.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<UserDealer>()
-                .HasOne<Dealer>()
+                .HasOne(ud => ud.Dealer)
                 .WithMany()
                 .HasForeignKey(ud => ud.DealerId)
                 .OnDelete(DeleteBehavior.Restrict);

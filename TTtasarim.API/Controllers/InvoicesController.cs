@@ -18,120 +18,65 @@ namespace TTtasarim.API.Controllers
             _context = context;
         }
 
-        // Test endpoint - hard-coded decimal değerler
-        [HttpGet("test")]
-        public IActionResult TestInvoices()
-        {
-            var testInvoices = new[]
-            {
-                new {
-                    id = Guid.NewGuid().ToString(),
-                    amount = 250.50m,
-                    accessNo = "5555555555",
-                    dueDate = DateTime.Now.AddDays(30).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                    description = "Test Elektrik Faturası",
-                    status = "beklemede",
-                    companyName = "TEDAŞ Test",
-                    companyId = Guid.NewGuid().ToString()
-                },
-                new {
-                    id = Guid.NewGuid().ToString(),
-                    amount = 180.75m,
-                    accessNo = "5555555555",
-                    dueDate = DateTime.Now.AddDays(25).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                    description = "Test Doğalgaz Faturası",
-                    status = "beklemede",
-                    companyName = "İGDAŞ Test",
-                    companyId = Guid.NewGuid().ToString()
-                },
-                new {
-                    id = Guid.NewGuid().ToString(),
-                    amount = 95.30m,
-                    accessNo = "5555555555",
-                    dueDate = DateTime.Now.AddDays(20).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                    description = "Test Su Faturası",
-                    status = "beklemede",
-                    companyName = "İSKİ Test",
-                    companyId = Guid.NewGuid().ToString()
-                }
-            };
-            
-            Console.WriteLine("Test endpoint - Hard-coded değerler:");
-            foreach (var invoice in testInvoices)
-            {
-                Console.WriteLine($"Test Fatura: {invoice.description}, Amount: {invoice.amount}");
-            }
-            
-            return Ok(testInvoices);
-        }
-
         // Fatura sorgulama (şirket + abone no ile)
         [HttpGet("query")]
         public async Task<IActionResult> QueryInvoices([FromQuery] Guid companyId, [FromQuery] string accessNo)
         {
             try
             {
-                Console.WriteLine($"Query parametreleri: CompanyId={companyId}, AccessNo={accessNo}");
-                
-                if (string.IsNullOrEmpty(accessNo))
-                    return BadRequest("Abone numarası gerekli");
+                if (companyId == Guid.Empty)
+                    return BadRequest(new { message = "Şirket seçimi gerekli" });
 
-                // Debug: Parametreleri ve database durumunu kontrol et
-                Console.WriteLine($"CompanyId: {companyId}");
-                Console.WriteLine($"AccessNo: '{accessNo}'");
-                
-                // Önce tüm faturaları kontrol et
-                var allInvoices = await _context.Invoices.ToListAsync();
-                Console.WriteLine($"Database'de toplam fatura sayısı: {allInvoices.Count}");
-                
-                foreach (var inv in allInvoices.Take(3))
-                {
-                    Console.WriteLine($"DB Fatura: ID={inv.Id}, Amount={inv.Amount}, AccessNo='{inv.AccessNo}', CompanyId={inv.CompanyId}, Status='{inv.Status}'");
-                }
+                if (string.IsNullOrWhiteSpace(accessNo))
+                    return BadRequest(new { message = "Abone numarası gerekli" });
 
+                // Şirket var mı kontrol et
+                var company = await _context.Companies.FindAsync(companyId);
+                if (company == null)
+                    return BadRequest(new { message = "Seçilen şirket bulunamadı" });
+
+                // Faturaları sorgula
                 var invoices = await _context.Invoices
-                    .Where(i => i.CompanyId == companyId && i.AccessNo == accessNo && i.Status == "beklemede")
+                    .Where(i => i.CompanyId == companyId && 
+                               i.AccessNo == accessNo && 
+                               i.Status == "beklemede")
                     .Include(i => i.Company)
+                    .OrderBy(i => i.DueDate)
                     .ToListAsync();
 
-                Console.WriteLine($"Query sonucu bulunan fatura sayısı: {invoices.Count}");
-                
-                if (invoices.Count == 0)
+                if (!invoices.Any())
                 {
-                    // Debug: Neden fatura bulunamadığını anlamaya çalış
-                    var byCompany = await _context.Invoices.Where(i => i.CompanyId == companyId).CountAsync();
-                    var byAccessNo = await _context.Invoices.Where(i => i.AccessNo == accessNo).CountAsync();
-                    var byStatus = await _context.Invoices.Where(i => i.Status == "beklemede").CountAsync();
-                    
-                    Console.WriteLine($"CompanyId ile eşleşen: {byCompany}");
-                    Console.WriteLine($"AccessNo ile eşleşen: {byAccessNo}");
-                    Console.WriteLine($"Status='beklemede' olan: {byStatus}");
+                    return Ok(new { 
+                        success = true, 
+                        message = "Girilen bilgilere göre ödenmemiş fatura bulunamadı",
+                        data = new List<object>() 
+                    });
                 }
-                
+
                 var result = invoices.Select(i => new
                 {
                     id = i.Id.ToString(),
-                    amount = Math.Round(i.Amount, 2), // Decimal değeri kesinlikle doğru formatta gönder
+                    amount = Math.Round(i.Amount, 2),
                     accessNo = i.AccessNo,
-                    dueDate = i.DueDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    dueDate = i.DueDate.ToString("yyyy-MM-dd"),
                     description = i.Description ?? "",
                     status = i.Status ?? "beklemede",
                     companyName = i.Company?.Name ?? "",
                     companyId = i.CompanyId.ToString()
                 }).ToList();
 
-                // Debug: Amount değerlerini kontrol et
-                foreach (var invoice in result)
-                {
-                    Console.WriteLine($"Response - ID: {invoice.id}, Amount: {invoice.amount} ({invoice.amount.GetType()}), Description: {invoice.description}, Company: {invoice.companyName}");
-                }
-                
-                return Ok(result);
+                return Ok(new { 
+                    success = true, 
+                    message = $"{result.Count} adet ödenmemiş fatura bulundu",
+                    data = result 
+                });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Invoice query hatası: {ex.Message}");
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Fatura sorgulanırken hata oluştu: " + ex.Message 
+                });
             }
         }
 
@@ -143,43 +88,59 @@ namespace TTtasarim.API.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 1. Faturayı bul ve kontrol et
-                var invoice = await _context.Invoices.FindAsync(request.InvoiceId);
+                // 1. Input validation
+                if (request.InvoiceId == Guid.Empty)
+                    return BadRequest(new { message = "Geçersiz fatura ID" });
+
+                // 2. Faturayı bul ve kontrol et
+                var invoice = await _context.Invoices
+                    .Include(i => i.Company)
+                    .FirstOrDefaultAsync(i => i.Id == request.InvoiceId);
+
                 if (invoice == null)
-                    return NotFound("Fatura bulunamadı");
+                    return NotFound(new { message = "Fatura bulunamadı" });
 
                 if (invoice.Status != "beklemede")
-                    return BadRequest("Bu fatura zaten ödenmiş");
+                    return BadRequest(new { message = "Bu fatura zaten ödenmiş veya iptal edilmiş" });
 
-                // 2. Kullanıcıyı bul
+                // 3. Kullanıcıyı bul
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!Guid.TryParse(userIdClaim, out Guid userId))
-                    return Unauthorized("Geçersiz kullanıcı");
+                    return Unauthorized(new { message = "Geçersiz kullanıcı oturumu" });
 
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null)
-                    return NotFound("Kullanıcı bulunamadı");
+                    return NotFound(new { message = "Kullanıcı bulunamadı" });
 
-                // 3. Kullanıcının bayisini bul
+                // 4. Kullanıcının bayi atamasını bul
                 var userDealer = await _context.UserDealers
+                    .Include(ud => ud.Dealer)
                     .FirstOrDefaultAsync(ud => ud.UserId == userId);
+                    
                 if (userDealer == null)
-                    return BadRequest("Kullanıcı herhangi bir bayiye atanmamış");
+                    return BadRequest(new { message = "Kullanıcı herhangi bir bayiye atanmamış. Lütfen admin ile iletişime geçin." });
 
-                // 4. Bayi kredisini bul
+                // 5. Bayi kredisini bul
                 var credit = await _context.Credits
                     .FirstOrDefaultAsync(c => c.DealerId == userDealer.DealerId);
+                    
                 if (credit == null)
-                    return BadRequest("Bayi kredi hesabı bulunamadı");
+                    return BadRequest(new { message = "Bayi kredi hesabı bulunamadı. Lütfen admin ile iletişime geçin." });
 
-                // 5. Kredi yeterli mi kontrol et
+                // 6. Kredi yeterli mi kontrol et
                 if (credit.CurrentValue < invoice.Amount)
-                    return BadRequest($"Yetersiz kredi. Mevcut bakiye: {credit.CurrentValue:C}, Fatura tutarı: {invoice.Amount:C}");
+                {
+                    return BadRequest(new { 
+                        message = $"Yetersiz kredi bakiyesi. Mevcut bakiye: {credit.CurrentValue:C2}, Fatura tutarı: {invoice.Amount:C2}",
+                        currentCredit = credit.CurrentValue,
+                        requiredAmount = invoice.Amount
+                    });
+                }
 
-                // 6. Kredi düş
+                // 7. Kredi düş
                 credit.CurrentValue -= invoice.Amount;
 
-                // 7. Kredi log kaydı oluştur
+                // 8. Kredi log kaydı oluştur
                 var creditLog = new CreditLog
                 {
                     Id = Guid.NewGuid(),
@@ -190,10 +151,10 @@ namespace TTtasarim.API.Controllers
                 };
                 _context.CreditLogs.Add(creditLog);
 
-                // 8. Fatura durumunu güncelle
+                // 9. Fatura durumunu güncelle
                 invoice.Status = "odendi";
 
-                // 9. Invoice transaction kaydı oluştur
+                // 10. Invoice transaction kaydı oluştur
                 var invoiceTransaction = new InvoiceTransaction
                 {
                     Id = Guid.NewGuid(),
@@ -207,101 +168,201 @@ namespace TTtasarim.API.Controllers
                 };
                 _context.InvoiceTransactions.Add(invoiceTransaction);
 
-                // 10. Tüm değişiklikleri kaydet
+                // 11. Tüm değişiklikleri kaydet
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 return Ok(new
                 {
-                    message = "Fatura başarıyla ödendi",
-                    invoiceId = invoice.Id,
-                    paidAmount = invoice.Amount,
-                    remainingCredit = credit.CurrentValue,
-                    transactionId = invoiceTransaction.Id
+                    success = true,
+                    message = "Fatura başarıyla ödendi!",
+                    invoice = new {
+                        id = invoice.Id,
+                        description = invoice.Description,
+                        amount = invoice.Amount,
+                        companyName = invoice.Company?.Name
+                    },
+                    payment = new {
+                        transactionId = invoiceTransaction.Id,
+                        paidAmount = invoice.Amount,
+                        remainingCredit = credit.CurrentValue,
+                        paymentDate = invoiceTransaction.TransactionDateTime
+                    },
+                    dealer = new {
+                        name = userDealer.Dealer?.Name ?? "",
+                        remainingCredit = credit.CurrentValue
+                    }
                 });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return StatusCode(500, $"Ödeme işlemi sırasında hata: {ex.Message}");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Ödeme işlemi sırasında hata oluştu: " + ex.Message 
+                });
             }
         }
 
         // Kullanıcının ödeme geçmişi
-        [HttpGet("user-invoices")]
+        [HttpGet("history")]
         [Authorize]
-        public async Task<IActionResult> GetUserInvoices()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(userIdClaim, out Guid userId))
-                return Unauthorized("Geçersiz kullanıcı");
-
-            var transactions = await _context.InvoiceTransactions
-                .Where(it => it.UserId == userId)
-                .Include(it => it.Company)
-                .Include(it => it.Dealer)
-                .OrderByDescending(it => it.TransactionDateTime)
-                .Select(it => new
-                {
-                    it.Id,
-                    it.Amount,
-                    it.AccessNo,
-                    it.TransactionDateTime,
-                    CompanyName = it.Company.Name,
-                    DealerName = it.Dealer.Name
-                })
-                .ToListAsync();
-
-            return Ok(transactions);
-        }
-
-        // Admin: Tüm faturaları listele
-        [HttpGet]
-        [Authorize(Roles = "admin")]
-        public async Task<IActionResult> GetAllInvoices()
+        public async Task<IActionResult> GetPaymentHistory()
         {
             try
             {
-                var invoices = await _context.Invoices
-                    .Include(i => i.Company)
-                    .OrderByDescending(i => i.CreatedAt)
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(userIdClaim, out Guid userId))
+                    return Unauthorized(new { message = "Geçersiz kullanıcı oturumu" });
+
+                var transactions = await _context.InvoiceTransactions
+                    .Where(it => it.UserId == userId)
+                    .Include(it => it.Company)
+                    .Include(it => it.Dealer)
+                    .OrderByDescending(it => it.TransactionDateTime)
+                    .Take(50) // Son 50 işlem
+                    .Select(it => new
+                    {
+                        id = it.Id.ToString(),
+                        amount = it.Amount,
+                        accessNo = it.AccessNo,
+                        transactionDate = it.TransactionDateTime.ToString("dd.MM.yyyy HH:mm"),
+                        companyName = it.Company != null ? it.Company.Name : "",
+                        dealerName = it.Dealer != null ? it.Dealer.Name : ""
+                    })
                     .ToListAsync();
-                    
-                Console.WriteLine($"Admin: Toplam {invoices.Count} fatura listeleniyor");
-                
-                foreach (var invoice in invoices.Take(3))
-                {
-                    Console.WriteLine($"Fatura: {invoice.Description} - AccessNo: {invoice.AccessNo} - CompanyId: {invoice.CompanyId} - Amount: {invoice.Amount}");
-                }
-                
-                return Ok(invoices);
+
+                return Ok(new { 
+                    success = true, 
+                    message = $"{transactions.Count} ödeme kaydı bulundu",
+                    data = transactions 
+                });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Admin invoice listesi hatası: {ex.Message}");
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Ödeme geçmişi alınırken hata oluştu: " + ex.Message 
+                });
+            }
+        }
+
+        // Kullanıcının mevcut kredi durumu
+        [HttpGet("credit-status")]
+        [Authorize]
+        public async Task<IActionResult> GetCreditStatus()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(userIdClaim, out Guid userId))
+                    return Unauthorized(new { message = "Geçersiz kullanıcı oturumu" });
+
+                var userDealer = await _context.UserDealers
+                    .Include(ud => ud.Dealer)
+                    .FirstOrDefaultAsync(ud => ud.UserId == userId);
+
+                if (userDealer == null)
+                    return BadRequest(new { message = "Kullanıcı herhangi bir bayiye atanmamış" });
+
+                var credit = await _context.Credits
+                    .FirstOrDefaultAsync(c => c.DealerId == userDealer.DealerId);
+
+                if (credit == null)
+                    return BadRequest(new { message = "Bayi kredi hesabı bulunamadı" });
+
+                return Ok(new
+                {
+                    success = true,
+                    dealer = new {
+                        name = userDealer.Dealer?.Name ?? "",
+                        code = userDealer.Dealer?.Code ?? ""
+                    },
+                    credit = new {
+                        currentValue = credit.CurrentValue,
+                        formattedValue = credit.CurrentValue.ToString("C2", new System.Globalization.CultureInfo("tr-TR"))
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Kredi durumu alınırken hata oluştu: " + ex.Message 
+                });
             }
         }
 
         // Admin: Yeni fatura ekle
         [HttpPost]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> CreateInvoice([FromBody] Invoice invoice)
+        public async Task<IActionResult> CreateInvoice([FromBody] CreateInvoiceRequest request)
         {
-            invoice.Id = Guid.NewGuid();
-            invoice.CreatedAt = DateTime.UtcNow;
-            if (string.IsNullOrEmpty(invoice.Status))
-                invoice.Status = "beklemede";
+            try
+            {
+                if (request.CompanyId == Guid.Empty)
+                    return BadRequest(new { message = "Şirket ID gerekli" });
 
-            _context.Invoices.Add(invoice);
-            await _context.SaveChangesAsync();
-            return Ok(invoice);
+                if (string.IsNullOrWhiteSpace(request.AccessNo))
+                    return BadRequest(new { message = "Abone numarası gerekli" });
+
+                if (request.Amount <= 0)
+                    return BadRequest(new { message = "Geçerli bir tutar giriniz" });
+
+                var company = await _context.Companies.FindAsync(request.CompanyId);
+                if (company == null)
+                    return BadRequest(new { message = "Şirket bulunamadı" });
+
+                var invoice = new Invoice
+                {
+                    Id = Guid.NewGuid(),
+                    CompanyId = request.CompanyId,
+                    AccessNo = request.AccessNo.Trim(),
+                    Amount = Math.Round(request.Amount, 2),
+                    Description = request.Description?.Trim() ?? $"{company.Name} Faturası",
+                    DueDate = request.DueDate ?? DateTime.UtcNow.AddDays(30),
+                    Status = "beklemede",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Invoices.Add(invoice);
+                await _context.SaveChangesAsync();
+
+                return Ok(new {
+                    success = true,
+                    message = "Fatura başarıyla oluşturuldu",
+                    invoice = new {
+                        id = invoice.Id,
+                        companyName = company.Name,
+                        accessNo = invoice.AccessNo,
+                        amount = invoice.Amount,
+                        description = invoice.Description,
+                        dueDate = invoice.DueDate.ToString("dd.MM.yyyy")
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Fatura oluşturulurken hata oluştu: " + ex.Message 
+                });
+            }
         }
     }
 
-    // Request model for payment
+    // Request models
     public class PayInvoiceRequest
     {
         public Guid InvoiceId { get; set; }
+    }
+
+    public class CreateInvoiceRequest
+    {
+        public Guid CompanyId { get; set; }
+        public string AccessNo { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string? Description { get; set; }
+        public DateTime? DueDate { get; set; }
     }
 }
