@@ -32,9 +32,9 @@ app.UseSession(); // burada olmak zorunda
 
 app.UseAuthorization();
 
-// Varsay�lan route (ilk a��lan sayfa: Giri�)
+// Varsay�lan route (ilk a��lan sayfa: TTOrtam Ana Sayfa)
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
+    pattern: "{controller=Dashboard}/{action=Index}/{id?}");
 
 app.Run();

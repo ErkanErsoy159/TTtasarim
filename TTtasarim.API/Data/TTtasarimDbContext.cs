@@ -78,7 +78,7 @@ namespace TTtasarim.API.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<CreditLog>()
-                .HasOne<Credit>()
+                .HasOne(cl => cl.Credit)
                 .WithMany()
                 .HasForeignKey(cl => cl.CreditId)
                 .OnDelete(DeleteBehavior.Restrict);

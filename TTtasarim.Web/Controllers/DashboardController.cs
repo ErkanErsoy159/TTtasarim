@@ -6,13 +6,7 @@ namespace TTtasarim.Web.Controllers
     {
         public IActionResult Index()
         {
-            var token = HttpContext.Session.GetString("JWT");
-            if (string.IsNullOrEmpty(token))
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            ViewBag.Token = token;
+            // Herkesin erişebileceği ana sayfa
             return View();
         }
     }

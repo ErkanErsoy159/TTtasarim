@@ -1,0 +1,85 @@
+@{
+    ViewData["Title"] = "Raporlar";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-chart-bar"></i> Raporlar</h2>
+                <a href="@Url.Action("Index", "Dashboard")" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Anasayfaya Dön
+                </a>
+            </div>
+
+            <!-- Hata Mesajları -->
+            @if (ViewBag.Hata != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> @ViewBag.Hata
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Rapor Kartları -->
+            <div class="row">
+                <!-- Fatura Ödeme Raporları -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-invoice-dollar"></i> Fatura Ödeme Raporları
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                Sistem üzerinden gerçekleştirilen tüm fatura ödeme işlemlerinin detaylı raporlarını görüntüleyebilirsiniz.
+                            </p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success"></i> Ödeme geçmişi</li>
+                                <li><i class="fas fa-check text-success"></i> İşlem detayları</li>
+                                <li><i class="fas fa-check text-success"></i> Tarih bazlı filtreleme</li>
+                                <li><i class="fas fa-check text-success"></i> Bayi bazlı raporlar</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer">
+                            <a href="@Url.Action("FaturaOdemeRaporlari")" class="btn btn-primary w-100">
+                                <i class="fas fa-chart-line"></i> Raporları Görüntüle
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kredi Takip Raporları -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-coins"></i> Kredi Takip Raporları
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                Bayi kredi hesaplarındaki tüm hareket ve işlemlerin detaylı takibini yapabilirsiniz.
+                            </p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success"></i> Kredi hareketleri</li>
+                                <li><i class="fas fa-check text-success"></i> Bakiye değişimleri</li>
+                                <li><i class="fas fa-check text-success"></i> İşlem türleri</li>
+                                <li><i class="fas fa-check text-success"></i> Tarihsel analiz</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer">
+                            <a href="@Url.Action("KrediTakipRaporlari")" class="btn btn-success w-100">
+                                <i class="fas fa-chart-pie"></i> Raporları Görüntüle
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>

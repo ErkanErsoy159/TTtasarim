@@ -1,12 +1,147 @@
 ﻿@{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "TTOrtam - Ana Sayfa";
 }
 
-<h2 class="mt-4 mb-3">Hoş Geldiniz!</h2>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Hero Section -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 font-weight-bold text-primary mb-3">
+                    <i class="fas fa-building"></i> TTOrtam
+                </h1>
+                <p class="lead text-muted">
+                    Modern Fatura Ödeme ve Bayi Yönetim Sistemi
+                </p>
+            </div>
 
-<div class="alert alert-success">
-    Giriş başarılı. JWT Token Session'da tutuluyor.
+            <!-- About Section -->
+            <div class="card shadow-lg mb-5">
+                <div class="card-body p-5">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h2 class="h3 mb-4 text-primary">
+                                <i class="fas fa-info-circle"></i> TTOrtam Hakkında
+                            </h2>
+                            <p class="mb-4">
+                                <strong>TTOrtam</strong>, modern teknoloji altyapısı ile geliştirilmiş kapsamlı bir fatura ödeme ve bayi yönetim sistemidir. 
+                                Sistem, işletmelerin fatura işlemlerini dijitalleştirmek ve bayi ağlarını etkin bir şekilde yönetmek amacıyla tasarlanmıştır.
+                            </p>
+                            
+                            <h4 class="text-secondary mb-3">
+                                <i class="fas fa-star"></i> Temel Özellikler
+                            </h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> Fatura Sorgulama ve Ödeme</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> Bayi Kredi Yönetimi</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> Kullanıcı Yetkilendirme</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> Gerçek Zamanlı İşlemler</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> Detaylı Raporlama</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> Güvenli API Altyapısı</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> Mobil Uyumlu Tasarım</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> 7/24 Erişim</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="bg-light rounded p-4">
+                                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                                <h5>Güvenilir Platform</h5>
+                                <p class="text-muted small">
+                                    JWT tabanlı güvenlik sistemi ile korunan verileriniz güvende.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technology Stack -->
+            <div class="card shadow mb-5">
+                <div class="card-body p-4">
+                    <h4 class="text-center mb-4">
+                        <i class="fas fa-code"></i> Teknoloji Altyapısı
+                    </h4>
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="fab fa-microsoft fa-2x text-primary mb-2"></i>
+                                <h6>.NET 8</h6>
+                                <small class="text-muted">Modern Backend</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-database fa-2x text-success mb-2"></i>
+                                <h6>SQL Server</h6>
+                                <small class="text-muted">Güvenilir Veritabanı</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="fab fa-bootstrap fa-2x text-info mb-2"></i>
+                                <h6>Bootstrap 5</h6>
+                                <small class="text-muted">Modern UI/UX</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-shield-alt fa-2x text-warning mb-2"></i>
+                                <h6>JWT Security</h6>
+                                <small class="text-muted">Güvenli Erişim</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Access -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-invoice-dollar fa-3x text-primary mb-3"></i>
+                            <h5>Fatura İşlemleri</h5>
+                            <p class="text-muted">Fatura sorgulama ve ödeme işlemlerini hızlıca gerçekleştirin.</p>
+                            <a href="@Url.Action("Index", "Faturalar")" class="btn btn-primary">
+                                <i class="fas fa-arrow-right"></i> Fatura İşlemlerine Git
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-body text-center">
+                            <i class="fas fa-sign-in-alt fa-3x text-success mb-3"></i>
+                            <h5>Giriş Yap</h5>
+                            <p class="text-muted">Sisteme giriş yaparak tüm özelliklere erişim sağlayın.</p>
+                            <a href="@Url.Action("Login", "Auth")" class="btn btn-success">
+                                <i class="fas fa-user"></i> Giriş Yap
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Info -->
+            <div class="text-center mt-5 mb-4">
+                <p class="text-muted">
+                    <small>
+                        <i class="fas fa-copyright"></i> 2025 TTOrtam - Tüm hakları saklıdır.
+                        <br>
+                        Modern teknoloji ile güçlendirilmiş, kullanıcı dostu fatura yönetim sistemi.
+                        <br>
+                        EDIT BY ERKAN ERSOY
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
-
-<p><strong>Token:</strong></p>
-<code>@ViewBag.Token</code>

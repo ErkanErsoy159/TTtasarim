@@ -247,6 +247,48 @@ namespace TTtasarim.API.Controllers
             }
         }
 
+        // Admin: Tüm kullanıcıların ödeme geçmişi (Raporlar için)
+        [HttpGet("admin-history")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetAdminPaymentHistory()
+        {
+            try
+            {
+                var transactions = await _context.InvoiceTransactions
+                    .Include(it => it.Company)
+                    .Include(it => it.Dealer)
+                    .Include(it => it.User)
+                    .OrderByDescending(it => it.TransactionDateTime)
+                    .Take(100) // Son 100 işlem
+                    .Select(it => new
+                    {
+                        id = it.Id.ToString(),
+                        amount = it.Amount,
+                        accessNo = it.AccessNo,
+                        transactionDate = it.TransactionDateTime.ToString("dd.MM.yyyy HH:mm"),
+                        companyName = it.Company != null ? it.Company.Name : "",
+                        dealerName = it.Dealer != null ? it.Dealer.Name : "",
+                        userName = it.User != null ? it.User.Username : "",
+                        userEmail = it.User != null ? it.User.Email : ""
+                    })
+                    .ToListAsync();
+
+                return Ok(new { 
+                    success = true, 
+                    message = $"{transactions.Count} ödeme kaydı bulundu",
+                    data = transactions 
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Admin Payment History API hatası: {ex.Message}");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Admin ödeme geçmişi alınırken hata oluştu: " + ex.Message 
+                });
+            }
+        }
+
         // Kullanıcının mevcut kredi durumu
         [HttpGet("credit-status")]
         [Authorize]

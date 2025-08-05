@@ -9,5 +9,8 @@ namespace TTtasarim.API.Models
         public decimal Amount { get; set; }
         public string OperationType { get; set; } // kredi_arttir / fatura_odeme
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation Property
+        public Credit? Credit { get; set; }
     }
 }
