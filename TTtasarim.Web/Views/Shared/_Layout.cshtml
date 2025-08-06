@@ -1,4 +1,4 @@
-﻿@{
+@{
     var userRole = Context.Session.GetString("UserRole");
     var isAuthenticated = Context.Session.GetString("JWT") != null;
 }
@@ -41,16 +41,25 @@
                                         <i class="fas fa-users"></i> Kullanıcılar
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Raporlar" asp-action="Index">
-                                        <i class="fas fa-chart-bar"></i> Raporlar
-                                    </a>
-                                </li>
                             }
 
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Faturalar" asp-action="Index">
                                     <i class="fas fa-file-invoice"></i> Faturalar
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Raporlar" asp-action="Index">
+                                    <i class="fas fa-chart-bar"></i> 
+                                    @if(userRole == "admin")
+                                    {
+                                        <text>Raporlar</text>
+                                    }
+                                    else
+                                    {
+                                        <text>Ödeme Geçmişi</text>
+                                    }
                                 </a>
                             </li>
 

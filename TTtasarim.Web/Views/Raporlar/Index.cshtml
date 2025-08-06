@@ -24,59 +24,121 @@
 
             <!-- Rapor Kartları -->
             <div class="row">
-                <!-- Fatura Ödeme Raporları -->
+                <!-- Fatura Ödeme Raporları - Tüm kullanıcılar için -->
                 <div class="col-md-6 mb-4">
                     <div class="card h-100 border-primary">
                         <div class="card-header bg-primary text-white">
                             <h5 class="mb-0">
-                                <i class="fas fa-file-invoice-dollar"></i> Fatura Ödeme Raporları
+                                <i class="fas fa-file-invoice-dollar"></i> 
+                                @if(ViewBag.UserRole == "admin")
+                                {
+                                    <text>Fatura Ödeme Raporları</text>
+                                }
+                                else
+                                {
+                                    <text>Ödeme Geçmişim</text>
+                                }
                             </h5>
                         </div>
                         <div class="card-body">
                             <p class="card-text">
-                                Sistem üzerinden gerçekleştirilen tüm fatura ödeme işlemlerinin detaylı raporlarını görüntüleyebilirsiniz.
+                                @if(ViewBag.UserRole == "admin")
+                                {
+                                    <text>Sistem üzerinden gerçekleştirilen tüm fatura ödeme işlemlerinin detaylı raporlarını görüntüleyebilirsiniz.</text>
+                                }
+                                else
+                                {
+                                    <text>Gerçekleştirdiğiniz fatura ödeme işlemlerinin detaylı geçmişini görüntüleyebilirsiniz.</text>
+                                }
                             </p>
                             <ul class="list-unstyled">
                                 <li><i class="fas fa-check text-success"></i> Ödeme geçmişi</li>
                                 <li><i class="fas fa-check text-success"></i> İşlem detayları</li>
-                                <li><i class="fas fa-check text-success"></i> Tarih bazlı filtreleme</li>
-                                <li><i class="fas fa-check text-success"></i> Bayi bazlı raporlar</li>
+                                @if(ViewBag.UserRole == "admin")
+                                {
+                                    <li><i class="fas fa-check text-success"></i> Tarih bazlı filtreleme</li>
+                                    <li><i class="fas fa-check text-success"></i> Bayi bazlı raporlar</li>
+                                }
+                                else
+                                {
+                                    <li><i class="fas fa-check text-success"></i> Kişisel işlemler</li>
+                                    <li><i class="fas fa-check text-success"></i> Son 50 işlem</li>
+                                }
                             </ul>
                         </div>
                         <div class="card-footer">
                             <a href="@Url.Action("FaturaOdemeRaporlari")" class="btn btn-primary w-100">
-                                <i class="fas fa-chart-line"></i> Raporları Görüntüle
+                                <i class="fas fa-chart-line"></i> 
+                                @if(ViewBag.UserRole == "admin")
+                                {
+                                    <text>Raporları Görüntüle</text>
+                                }
+                                else
+                                {
+                                    <text>Geçmişimi Görüntüle</text>
+                                }
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Kredi Takip Raporları -->
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100 border-success">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-coins"></i> Kredi Takip Raporları
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">
-                                Bayi kredi hesaplarındaki tüm hareket ve işlemlerin detaylı takibini yapabilirsiniz.
-                            </p>
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-check text-success"></i> Kredi hareketleri</li>
-                                <li><i class="fas fa-check text-success"></i> Bakiye değişimleri</li>
-                                <li><i class="fas fa-check text-success"></i> İşlem türleri</li>
-                                <li><i class="fas fa-check text-success"></i> Tarihsel analiz</li>
-                            </ul>
-                        </div>
-                        <div class="card-footer">
-                            <a href="@Url.Action("KrediTakipRaporlari")" class="btn btn-success w-100">
-                                <i class="fas fa-chart-pie"></i> Raporları Görüntüle
-                            </a>
+                <!-- Kredi Takip Raporları - Sadece admin için -->
+                @if(ViewBag.UserRole == "admin")
+                {
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-coins"></i> Kredi Takip Raporları
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    Bayi kredi hesaplarındaki tüm hareket ve işlemlerin detaylı takibini yapabilirsiniz.
+                                </p>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success"></i> Kredi hareketleri</li>
+                                    <li><i class="fas fa-check text-success"></i> Bakiye değişimleri</li>
+                                    <li><i class="fas fa-check text-success"></i> İşlem türleri</li>
+                                    <li><i class="fas fa-check text-success"></i> Tarihsel analiz</li>
+                                </ul>
+                            </div>
+                            <div class="card-footer">
+                                <a href="@Url.Action("KrediTakipRaporlari")" class="btn btn-success w-100">
+                                    <i class="fas fa-chart-pie"></i> Raporları Görüntüle
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <!-- Normal kullanıcılar için bilgi kartı -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 border-info">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-info-circle"></i> Bilgilendirme
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    Kredi takip raporları sadece yönetici kullanıcılar tarafından görüntülenebilir.
+                                </p>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-user-check text-info"></i> Yönetici yetkisi gerekli</li>
+                                    <li><i class="fas fa-shield-alt text-info"></i> Güvenlik kısıtlaması</li>
+                                    <li><i class="fas fa-lock text-info"></i> Erişim korunması</li>
+                                </ul>
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-secondary w-100" disabled>
+                                    <i class="fas fa-ban"></i> Erişim Yok
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
 
 
