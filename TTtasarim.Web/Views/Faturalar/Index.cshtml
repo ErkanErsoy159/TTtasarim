@@ -155,20 +155,7 @@
                             </table>
                         </div>
                         
-                        <!-- Toplam Tutar -->
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i>
-                                    <strong>Bilgi:</strong> Sadece ödenmemiş faturalar gösterilmektedir.
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <div class="alert alert-warning">
-                                    <strong>Toplam Tutar: <span id="totalAmount">₺0,00</span></strong>
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -200,11 +187,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Dikkat:</strong> Ödeme işlemi geri alınamaz!
-                </div>
-                
                 <div class="row">
                     <div class="col-12">
                         <table class="table table-borderless">
@@ -229,19 +211,6 @@
                                 <td><h5 class="text-danger mb-0" id="paymentAmount">₺0,00</h5></td>
                             </tr>
                         </table>
-                    </div>
-                </div>
-
-                <div class="alert alert-success" id="creditInfo">
-                    <div class="row">
-                        <div class="col-6">
-                            <strong>Mevcut Kredi:</strong><br>
-                            <span id="currentCredit">₺0,00</span>
-                        </div>
-                        <div class="col-6">
-                            <strong>Kalan Kredi:</strong><br>
-                            <span id="remainingCredit">₺0,00</span>
-                        </div>
                     </div>
                 </div>
 
@@ -273,19 +242,6 @@
                 <i class="fas fa-check-circle fa-5x text-success mb-4"></i>
                 <h4 class="text-success">Ödeme Başarıyla Tamamlandı!</h4>
                 <p class="lead" id="successMessage">Faturanız başarıyla ödendi.</p>
-                
-                <div class="alert alert-info mt-3">
-                    <div class="row">
-                        <div class="col-6">
-                            <strong>Ödenen Tutar:</strong><br>
-                            <span id="paidAmount">₺0,00</span>
-                        </div>
-                        <div class="col-6">
-                            <strong>Kalan Kredi:</strong><br>
-                            <span id="newRemainingCredit">₺0,00</span>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="location.reload()">
@@ -363,11 +319,9 @@
     // Faturaları tabloda göster
     function displayInvoices(invoices) {
         let tableBody = '';
-        let totalAmount = 0;
 
         invoices.forEach(function(invoice, index) {
             const amount = parseFloat(invoice.amount) || 0;
-            totalAmount += amount;
             
             const formattedAmount = new Intl.NumberFormat('tr-TR', {
                 style: 'currency',
@@ -395,10 +349,6 @@
 
         $('#invoiceTableBody').html(tableBody);
         $('#invoiceCount').text(invoices.length);
-        $('#totalAmount').text(new Intl.NumberFormat('tr-TR', {
-            style: 'currency',
-            currency: 'TRY'
-        }).format(totalAmount));
         $('#invoiceResults').show();
     }
 
@@ -429,27 +379,33 @@
             type: 'GET',
             success: function(response) {
                 if (response.success && response.data) {
+                    // Bayi durumu kontrolü
+                    if (response.data.dealerStatus && response.data.dealerStatus !== 'aktif') {
+                        $('#confirmPaymentBtn').prop('disabled', true).html('<i class="fas fa-ban"></i> Bayi Pasif');
+                        
+                        // Bayi pasif uyarısı göster
+                        showAlert('warning', `Bayi pasif durumda: ${response.data.dealerName}. Fatura ödeme işlemi yapılamaz.`);
+                        return;
+                    }
+                    
                     const currentCredit = response.data.currentCredit;
                     const remainingCredit = currentCredit - invoiceAmount;
-                    
-                    $('#currentCredit').text(new Intl.NumberFormat('tr-TR', {
-                        style: 'currency',
-                        currency: 'TRY'
-                    }).format(currentCredit));
-                    
-                    $('#remainingCredit').text(new Intl.NumberFormat('tr-TR', {
-                        style: 'currency',
-                        currency: 'TRY'
-                    }).format(remainingCredit));
 
                     // Yetersiz kredi kontrolü
                     if (remainingCredit < 0) {
-                        $('#creditInfo').removeClass('alert-success').addClass('alert-danger');
                         $('#confirmPaymentBtn').prop('disabled', true).html('<i class="fas fa-times"></i> Yetersiz Kredi');
                     } else {
-                        $('#creditInfo').removeClass('alert-danger').addClass('alert-success');
                         $('#confirmPaymentBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Ödemeyi Onayla');
                     }
+                }
+            },
+            error: function(xhr) {
+                // Bayi pasif durumu için özel hata mesajı
+                if (xhr.responseJSON && xhr.responseJSON.message && xhr.responseJSON.message.includes('Bayi pasif durumda')) {
+                    $('#confirmPaymentBtn').prop('disabled', true).html('<i class="fas fa-ban"></i> Bayi Pasif');
+                    showAlert('warning', xhr.responseJSON.message);
+                } else {
+                    $('#confirmPaymentBtn').prop('disabled', true).html('<i class="fas fa-exclamation-triangle"></i> Hata');
                 }
             }
         });
@@ -477,14 +433,6 @@
                     
                     // Başarı modalını göster
                     $('#successMessage').text(response.message);
-                    $('#paidAmount').text(new Intl.NumberFormat('tr-TR', {
-                        style: 'currency',
-                        currency: 'TRY'
-                    }).format(response.data.paidAmount));
-                    $('#newRemainingCredit').text(new Intl.NumberFormat('tr-TR', {
-                        style: 'currency',
-                        currency: 'TRY'
-                    }).format(response.data.remainingCredit));
                     
                     $('#paymentSuccessModal').modal('show');
                     
@@ -544,5 +492,38 @@
     $('#accessNo').on('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '');
     });
+
+    // Sayfa yüklendiğinde bayi durumu kontrolü
+    $(document).ready(function() {
+        checkDealerStatus();
+    });
+
+    // Bayi durumu kontrolü
+    function checkDealerStatus() {
+        $.ajax({
+            url: '@Url.Action("GetCreditStatus")',
+            type: 'GET',
+            success: function(response) {
+                if (response.success && response.data) {
+                    if (response.data.dealerStatus && response.data.dealerStatus !== 'aktif') {
+                        showAlert('warning', `Bayi pasif durumda: ${response.data.dealerName}. Fatura ödeme işlemi yapılamaz.`);
+                        
+                        // Kredi kartını pasif durumda göster
+                        $('.card.border-info').removeClass('border-info').addClass('border-warning');
+                        $('#currentCreditDisplay').html('<span class="text-warning"><i class="fas fa-ban"></i> Pasif</span>');
+                    }
+                }
+            },
+            error: function(xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.message && xhr.responseJSON.message.includes('Bayi pasif durumda')) {
+                    showAlert('warning', xhr.responseJSON.message);
+                    
+                    // Kredi kartını pasif durumda göster
+                    $('.card.border-info').removeClass('border-info').addClass('border-warning');
+                    $('#currentCreditDisplay').html('<span class="text-warning"><i class="fas fa-ban"></i> Pasif</span>');
+                }
+            }
+        });
+    }
 </script>
 }

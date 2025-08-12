@@ -20,7 +20,7 @@ namespace TTtasarim.Web.Controllers
         public IActionResult Index()
         {
             var role = HttpContext.Session.GetString("UserRole");
-            if (role != "admin")
+            if (string.IsNullOrEmpty(role))
                 return RedirectToAction("Login", "Auth");
 
             return View();
@@ -29,6 +29,7 @@ namespace TTtasarim.Web.Controllers
         // Fatura ödeme raporları (ödeme geçmişinin aynısı)
         public async Task<IActionResult> FaturaOdemeRaporlari()
         {
+            var role = HttpContext.Session.GetString("UserRole");
             var token = HttpContext.Session.GetString("JWT");
             if (string.IsNullOrEmpty(token))
                 return RedirectToAction("Login", "Auth");
@@ -38,7 +39,11 @@ namespace TTtasarim.Web.Controllers
                 var client = _clientFactory.CreateClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var apiUrl = _configuration["Api:BaseUrl"] + "/api/invoices/admin-history";
+                // Admin için tüm işlemler, normal kullanıcı için sadece kendi işlemleri
+                var apiUrl = role == "admin" 
+                    ? _configuration["Api:BaseUrl"] + "/api/invoices/admin-history"
+                    : _configuration["Api:BaseUrl"] + "/api/invoices/history";
+                    
                 var response = await client.GetAsync(apiUrl);
 
                 if (response.IsSuccessStatusCode)
@@ -48,11 +53,13 @@ namespace TTtasarim.Web.Controllers
                     
                     ViewBag.PaymentHistory = result?.Data ?? new List<dynamic>();
                     ViewBag.Message = result?.Message;
+                    ViewBag.IsAdmin = role == "admin";
                 }
                 else
                 {
                     ViewBag.PaymentHistory = new List<dynamic>();
                     ViewBag.Hata = "Fatura ödeme raporları alınamadı";
+                    ViewBag.IsAdmin = role == "admin";
                 }
 
                 return View();
@@ -61,6 +68,7 @@ namespace TTtasarim.Web.Controllers
             {
                 ViewBag.PaymentHistory = new List<dynamic>();
                 ViewBag.Hata = "Bir hata oluştu: " + ex.Message;
+                ViewBag.IsAdmin = role == "admin";
                 return View();
             }
         }

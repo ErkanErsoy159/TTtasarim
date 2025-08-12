@@ -118,7 +118,7 @@ namespace TTtasarim.API.Data
                     Id = adminUserId,
                     Username = "admin",
                     Email = "admin@tttasarim.com",
-                    Password = "Admin123!", // TODO: BCrypt hash this
+                    Password = "Admin123!",
                     GSM = "5555555555",
                     UserType = "admin",
                     CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)

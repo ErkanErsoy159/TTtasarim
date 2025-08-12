@@ -163,6 +163,7 @@ namespace TTtasarim.API.Controllers
                 // Mevcut krediyi bul veya oluştur
                 var credit = await _context.Credits.FirstOrDefaultAsync(c => c.DealerId == id);
                 
+                decimal oldValue = 0;
                 if (credit == null)
                 {
                     // Yeni kredi hesabı oluştur
@@ -178,29 +179,35 @@ namespace TTtasarim.API.Controllers
                 else
                 {
                     // Mevcut krediyi güncelle
+                    oldValue = credit.CurrentValue;
                     credit.CurrentValue = request.Amount;
                 }
 
+                // Fark hesapla
+                decimal difference = request.Amount - oldValue;
+                
                 // Credit log kaydı oluştur
                 var creditLog = new CreditLog
                 {
                     Id = Guid.NewGuid(),
                     CreditId = credit.Id,
-                    Amount = request.Amount,
-                    OperationType = "admin_guncelleme",
+                    Amount = Math.Abs(difference), // Fark değeri (mutlak değer)
+                    OperationType = difference >= 0 ? "admin_arttirma" : "admin_azaltma",
                     CreatedAt = DateTime.UtcNow
                 };
                 _context.CreditLogs.Add(creditLog);
 
                 await _context.SaveChangesAsync();
 
-                Console.WriteLine($"Bayi {dealer.Name} kredisi güncellendi: {request.Amount}");
+                Console.WriteLine($"Bayi {dealer.Name} kredisi güncellendi: Eski: {oldValue}, Yeni: {request.Amount}, Fark: {difference}");
 
                 return Ok(new
                 {
                     message = "Kredi başarıyla güncellendi",
                     dealerId = id.ToString(),
+                    oldCreditAmount = oldValue,
                     newCreditAmount = request.Amount,
+                    difference = difference,
                     creditId = credit.Id.ToString()
                 });
             }

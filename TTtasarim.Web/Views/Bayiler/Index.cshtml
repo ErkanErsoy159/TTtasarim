@@ -50,7 +50,7 @@
                                 <tbody>
                                     @foreach (var bayi in Model)
                                     {
-                                        <tr>
+                                        <tr class="@(bayi.Status != "aktif" ? "table-warning" : "")" data-dealer-id="@bayi.Id">
                                             <td>
                                                 <strong class="text-primary">@bayi.Code</strong>
                                             </td>
@@ -62,11 +62,15 @@
                                                 }
                                                 else
                                                 {
-                                                    <span class="badge bg-secondary">@bayi.Status</span>
+                                                    <span class="badge bg-danger">Pasif</span>
                                                 }
                                             </td>
                                             <td>
-                                                @if (bayi.HasCredit)
+                                                @if (bayi.Status != "aktif")
+                                                {
+                                                    <span class="badge bg-secondary">Pasif Bayi</span>
+                                                }
+                                                else if (bayi.HasCredit)
                                                 {
                                                     <span class="badge bg-info">Kredi Var</span>
                                                 }
@@ -76,19 +80,30 @@
                                                 }
                                             </td>
                                             <td>
-                                                <strong class="text-success">
-                                                    @bayi.CurrentCredit.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
-                                                </strong>
+                                                @if (bayi.Status != "aktif")
+                                                {
+                                                    <strong class="text-muted">
+                                                        <i class="fas fa-ban"></i> Pasif
+                                                    </strong>
+                                                }
+                                                else
+                                                {
+                                                    <strong class="text-success">
+                                                        @bayi.CurrentCredit.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                                    </strong>
+                                                }
                                             </td>
                                             <td>@bayi.CreatedAt.ToString("dd.MM.yyyy")</td>
                                             <td>
                                                 <div class="btn-group" role="group">
-                                                    <button type="button" class="btn btn-sm btn-primary" 
-                                                            onclick="editDealer('@bayi.Id', '@bayi.Code', '@bayi.Name', '@bayi.Status')">
-                                                        <i class="fas fa-edit"></i>
+                                                    <button type="button" class="btn btn-sm @(bayi.Status != "aktif" ? "btn-warning" : "btn-primary")" 
+                                                            onclick="editDealer('@bayi.Id', '@bayi.Code', '@bayi.Name', '@bayi.Status')"
+                                                            title="@(bayi.Status != "aktif" ? "Pasif bayiyi aktif hale getir" : "Bayiyi düzenle")">
+                                                        <i class="fas @(bayi.Status != "aktif" ? "fa-toggle-on" : "fa-edit")"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-info" 
-                                                            onclick="updateCredit('@bayi.Id', '@bayi.Name', @bayi.CurrentCredit)">
+                                                            onclick="updateCredit('@bayi.Id', '@bayi.Name', @bayi.CurrentCredit)"
+                                                            title="@(bayi.Status != "aktif" ? "Pasif bayi için kredi güncelle" : "Kredi güncelle")">
                                                         <i class="fas fa-coins"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-danger" 
@@ -221,7 +236,9 @@
                             <input type="number" class="form-control" id="creditAmount" 
                                    step="0.01" min="0" required>
                         </div>
-                        <div class="form-text">Mevcut kredi: <span id="currentCreditAmount"></span></div>
+                        <div class="form-text">
+                            <strong>Mevcut kredi:</strong> <span id="currentCreditAmount" class="text-primary"></span>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -281,7 +298,17 @@
         $('#editId').val(id);
         $('#editCode').val(code);
         $('#editName').val(name);
-        $('#editStatus').val(status);
+        $('#editStatus').val(status).data('original-status', status);
+        
+        // Modal başlığını ve buton metnini duruma göre güncelle
+        if (status === 'pasif') {
+            $('.modal-title').html('<i class="fas fa-toggle-on"></i> Pasif Bayiyi Aktif Hale Getir');
+            $('.modal-footer .btn-primary').html('<i class="fas fa-toggle-on"></i> Aktif Hale Getir');
+        } else {
+            $('.modal-title').html('<i class="fas fa-edit"></i> Bayi Düzenle');
+            $('.modal-footer .btn-primary').html('<i class="fas fa-save"></i> Güncelle');
+        }
+        
         $('#editDealerModal').modal('show');
     }
 
@@ -312,7 +339,14 @@
             success: function(response) {
                 if (response.success) {
                     $('#editDealerModal').modal('hide');
-                    showAlert('success', response.message);
+                    
+                    // Duruma göre farklı mesaj göster
+                    let message = response.message;
+                    if (status === 'aktif' && $('#editStatus').data('original-status') === 'pasif') {
+                        message = 'Bayi başarıyla aktif hale getirildi!';
+                    }
+                    
+                    showAlert('success', message);
                     setTimeout(function() {
                         location.reload();
                     }, 1500);
@@ -329,28 +363,43 @@
     // Kredi güncelleme modal açma
     function updateCredit(dealerId, dealerName, currentCredit) {
         $('#creditDealerId').val(dealerId);
+        $('#creditDealerId').data('current-credit', currentCredit);
         $('#creditDealerName').val(dealerName);
         $('#creditAmount').val(currentCredit);
         $('#currentCreditAmount').text('₺' + currentCredit.toLocaleString('tr-TR', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }));
+        
+        // Pasif bayi için farklı başlık göster
+        const dealerRow = $(`tr[data-dealer-id="${dealerId}"]`);
+        const isPassive = dealerRow.find('.badge.bg-danger').length > 0;
+        
+        if (isPassive) {
+            $('.modal-title').html('<i class="fas fa-coins"></i> Pasif Bayi Kredisi Güncelle');
+            $('.modal-footer .btn-info').html('<i class="fas fa-coins"></i> Kredi Güncelle (Pasif)');
+        } else {
+            $('.modal-title').html('<i class="fas fa-coins"></i> Kredi Güncelle');
+            $('.modal-footer .btn-info').html('<i class="fas fa-coins"></i> Kredi Güncelle');
+        }
+        
         $('#updateCreditModal').modal('show');
     }
 
     // Kredi güncelleme
     function submitCreditUpdate() {
         const dealerId = $('#creditDealerId').val();
-        const amount = parseFloat($('#creditAmount').val());
+        const newAmount = parseFloat($('#creditAmount').val());
+        const currentAmount = parseFloat($('#creditDealerId').data('current-credit') || 0);
 
-        if (isNaN(amount) || amount < 0) {
+        if (isNaN(newAmount) || newAmount < 0) {
             showAlert('danger', 'Geçerli bir tutar girin!');
             return;
         }
 
         const data = {
             DealerId: dealerId,
-            Amount: amount
+            Amount: newAmount
         };
 
         $.ajax({
@@ -361,7 +410,17 @@
             success: function(response) {
                 if (response.success) {
                     $('#updateCreditModal').modal('hide');
-                    showAlert('success', response.message);
+                    
+                    // Pasif bayi için farklı mesaj göster
+                    const dealerRow = $(`tr[data-dealer-id="${dealerId}"]`);
+                    const isPassive = dealerRow.find('.badge.bg-danger').length > 0;
+                    
+                    let message = response.message;
+                    if (isPassive) {
+                        message = 'Pasif bayi kredisi başarıyla güncellendi!';
+                    }
+                    
+                    showAlert('success', message);
                     setTimeout(function() {
                         location.reload();
                     }, 1500);

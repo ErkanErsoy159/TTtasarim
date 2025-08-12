@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Fatura Ödeme Raporları";
+    ViewData["Title"] = ViewBag.IsAdmin == true ? "Fatura Ödeme Raporları" : "Ödeme Geçmişi";
 }
 
 <div class="container-fluid mt-4">
@@ -7,7 +7,17 @@
         <div class="col-12">
             <!-- Header -->
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><i class="fas fa-file-invoice-dollar"></i> Fatura Ödeme Raporları</h2>
+                <h2>
+                    <i class="fas fa-file-invoice-dollar"></i> 
+                    @if (ViewBag.IsAdmin == true)
+                    {
+                        <span>Fatura Ödeme Raporları</span>
+                    }
+                    else
+                    {
+                        <span>Ödeme Geçmişi</span>
+                    }
+                </h2>
                 <a href="@Url.Action("Index")" class="btn btn-primary">
                     <i class="fas fa-arrow-left"></i> Raporlar
                 </a>
@@ -28,7 +38,15 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="fas fa-list"></i> Ödeme İşlemleri
+                        <i class="fas fa-list"></i> 
+                        @if (ViewBag.IsAdmin == true)
+                        {
+                            <span>Ödeme İşlemleri</span>
+                        }
+                        else
+                        {
+                            <span>Ödeme Geçmişiniz</span>
+                        }
                         @if (ViewBag.Message != null)
                         {
                             <small class="text-muted">(@ViewBag.Message)</small>
@@ -46,7 +64,10 @@
                                         <th><i class="fas fa-building"></i> Şirket</th>
                                         <th><i class="fas fa-phone"></i> Abone No</th>
                                         <th><i class="fas fa-lira-sign"></i> Tutar</th>
-                                        <th><i class="fas fa-user"></i> Kullanıcı</th>
+                                        @if (ViewBag.IsAdmin == true)
+                                        {
+                                            <th><i class="fas fa-user"></i> Kullanıcı</th>
+                                        }
                                         <th><i class="fas fa-store"></i> Bayi</th>
                                         <th><i class="fas fa-receipt"></i> İşlem ID</th>
                                     </tr>
@@ -82,17 +103,20 @@
                                                     @formattedAmount
                                                 </strong>
                                             </td>
-                                            <td>
-                                                @if (((dynamic)payment).userName != null)
-                                                {
-                                                    <strong class="text-primary">@(((dynamic)payment).userName.ToString())</strong>
-                                                    <small class="text-muted d-block">@(((dynamic)payment).userEmail.ToString())</small>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">Kullanıcı Bilgisi Yok</span>
-                                                }
-                                            </td>
+                                            @if (ViewBag.IsAdmin == true)
+                                            {
+                                                <td>
+                                                    @if (((dynamic)payment).userName != null)
+                                                    {
+                                                        <strong class="text-primary">@(((dynamic)payment).userName.ToString())</strong>
+                                                        <small class="text-muted d-block">@(((dynamic)payment).userEmail.ToString())</small>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">Kullanıcı Bilgisi Yok</span>
+                                                    }
+                                                </td>
+                                            }
                                             <td>
                                                 <span class="badge bg-secondary">@(((dynamic)payment).dealerName.ToString())</span>
                                             </td>
@@ -109,7 +133,14 @@
 
                         <div class="mt-3">
                             <small class="text-muted">
-                                Son 50 işlem gösterilmektedir
+                                @if (ViewBag.IsAdmin == true)
+                                {
+                                    <span>Son 100 işlem gösterilmektedir</span>
+                                }
+                                else
+                                {
+                                    <span>Son 50 işlem gösterilmektedir</span>
+                                }
                             </small>
                         </div>
                     }
@@ -117,9 +148,25 @@
                     {
                         <div class="text-center py-5">
                             <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">Henüz ödeme kaydı bulunmuyor</h5>
+                            <h5 class="text-muted">
+                                @if (ViewBag.IsAdmin == true)
+                                {
+                                    <span>Henüz ödeme kaydı bulunmuyor</span>
+                                }
+                                else
+                                {
+                                    <span>Henüz ödeme geçmişiniz bulunmuyor</span>
+                                }
+                            </h5>
                             <p class="text-muted">
-                                İlk fatura ödemeniz yapıldığında buraya kaydedilecektir.
+                                @if (ViewBag.IsAdmin == true)
+                                {
+                                    <span>İlk fatura ödemeniz yapıldığında buraya kaydedilecektir.</span>
+                                }
+                                else
+                                {
+                                    <span>İlk fatura ödemenizi yaptığınızda buraya kaydedilecektir.</span>
+                                }
                             </p>
                             <a href="@Url.Action("Index", "Faturalar")" class="btn btn-primary">
                                 <i class="fas fa-search"></i> Fatura Sorgula

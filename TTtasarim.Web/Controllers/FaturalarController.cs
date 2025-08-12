@@ -249,9 +249,21 @@ namespace TTtasarim.Web.Controllers
                         {
                             DealerName = result.Data.Dealer?.Name ?? "",
                             DealerCode = result.Data.Dealer?.Code ?? "",
+                            DealerStatus = result.Data.Dealer?.Status ?? "",
                             CurrentCredit = result.Data.Credit?.CurrentValue ?? 0,
                             FormattedCredit = result.Data.Credit?.FormattedValue ?? "₺0,00"
                         };
+                    }
+                }
+                else
+                {
+                    // API'den hata döndüyse, özellikle bayi pasif durumu için
+                    var json = await response.Content.ReadAsStringAsync();
+                    var errorResult = JsonConvert.DeserializeObject<dynamic>(json);
+                    
+                    if (errorResult?.dealerStatus?.ToString() == "pasif")
+                    {
+                        throw new Exception(errorResult?.message?.ToString() ?? "Bayi pasif durumda");
                     }
                 }
             }
@@ -309,6 +321,7 @@ namespace TTtasarim.Web.Controllers
     {
         public string DealerName { get; set; } = string.Empty;
         public string DealerCode { get; set; } = string.Empty;
+        public string DealerStatus { get; set; } = string.Empty;
         public decimal CurrentCredit { get; set; }
         public string FormattedCredit { get; set; } = string.Empty;
     }
@@ -323,6 +336,7 @@ namespace TTtasarim.Web.Controllers
     {
         public string Name { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
     }
 
     public class CreditInfo

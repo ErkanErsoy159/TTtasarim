@@ -1,6 +1,6 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Razor views i�in
+// Razor views için
 builder.Services.AddControllersWithViews();
 
 // HttpClient servisi
@@ -16,7 +16,7 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Middleware s�ralamas�
+// Middleware sıralaması
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -32,7 +32,7 @@ app.UseSession(); // burada olmak zorunda
 
 app.UseAuthorization();
 
-// Varsay�lan route (ilk a��lan sayfa: TTOrtam Ana Sayfa)
+// Varsayılan route (ilk açılan sayfa: TTOrtam Ana Sayfa)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Dashboard}/{action=Index}/{id?}");

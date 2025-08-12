@@ -120,11 +120,21 @@ namespace TTtasarim.API.Controllers
                 if (userDealer == null)
                     return BadRequest(new { message = "Kullanıcı herhangi bir bayiye atanmamış. Lütfen admin ile iletişime geçin." });
 
+                // 4.1. Bayi durumunu kontrol et
+                if (userDealer.Dealer?.Status != "aktif")
+                {
+                    return BadRequest(new { 
+                        message = $"Bayi pasif durumda. Fatura ödeme işlemi yapılamaz. Bayi: {userDealer.Dealer?.Name ?? "Bilinmeyen Bayi"}",
+                        dealerName = userDealer.Dealer?.Name ?? "Bilinmeyen Bayi",
+                        dealerStatus = userDealer.Dealer?.Status ?? "bilinmiyor"
+                    });
+                }
+
                 // 5. Bayi kredisini bul
                 var credit = await _context.Credits
                     .FirstOrDefaultAsync(c => c.DealerId == userDealer.DealerId);
                     
-                if (credit == null)
+                if (credit==null)
                     return BadRequest(new { message = "Bayi kredi hesabı bulunamadı. Lütfen admin ile iletişime geçin." });
 
                 // 6. Kredi yeterli mi kontrol et
@@ -307,6 +317,16 @@ namespace TTtasarim.API.Controllers
                 if (userDealer == null)
                     return BadRequest(new { message = "Kullanıcı herhangi bir bayiye atanmamış" });
 
+                // Bayi durumunu kontrol et
+                if (userDealer.Dealer?.Status != "aktif")
+                {
+                    return BadRequest(new { 
+                        message = $"Bayi pasif durumda. Fatura ödeme işlemi yapılamaz. Bayi: {userDealer.Dealer?.Name ?? "Bilinmeyen Bayi"}",
+                        dealerStatus = "pasif",
+                        dealerName = userDealer.Dealer?.Name ?? "Bilinmeyen Bayi"
+                    });
+                }
+
                 var credit = await _context.Credits
                     .FirstOrDefaultAsync(c => c.DealerId == userDealer.DealerId);
 
@@ -318,7 +338,8 @@ namespace TTtasarim.API.Controllers
                     success = true,
                     dealer = new {
                         name = userDealer.Dealer?.Name ?? "",
-                        code = userDealer.Dealer?.Code ?? ""
+                        code = userDealer.Dealer?.Code ?? "",
+                        status = userDealer.Dealer?.Status ?? "bilinmiyor"
                     },
                     credit = new {
                         currentValue = credit.CurrentValue,

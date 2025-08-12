@@ -81,10 +81,16 @@
                                                         operationType = "";
                                                     }
                                                 }
-                                                @if (operationType == "kredi_arttir" || operationType == "admin_guncelleme")
+                                                @if (operationType == "kredi_arttir" || operationType == "admin_arttirma")
                                                 {
                                                     <strong class="text-success">
                                                         +@formattedLogAmount
+                                                    </strong>
+                                                }
+                                                else if (operationType == "admin_azaltma")
+                                                {
+                                                    <strong class="text-danger">
+                                                        -@formattedLogAmount
                                                     </strong>
                                                 }
                                                 else
@@ -103,9 +109,13 @@
                                                 {
                                                     <span class="badge bg-warning">Fatura Ödeme</span>
                                                 }
-                                                else if (operationType == "admin_guncelleme")
+                                                else if (operationType == "admin_arttirma")
                                                 {
-                                                    <span class="badge bg-info">Admin Güncelleme</span>
+                                                    <span class="badge bg-info">Admin Arttırma</span>
+                                                }
+                                                else if (operationType == "admin_azaltma")
+                                                {
+                                                    <span class="badge bg-danger">Admin Azaltma</span>
                                                 }
                                                 else
                                                 {
