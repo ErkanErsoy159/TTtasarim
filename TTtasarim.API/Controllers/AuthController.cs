@@ -72,6 +72,7 @@ namespace TTtasarim.API.Controllers
             return Ok(new
             {
                 token = tokenString,
+                user.Username,
                 user.Email,
                 user.UserType
             });

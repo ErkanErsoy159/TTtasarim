@@ -19,7 +19,7 @@ var app = builder.Build();
 // Middleware sıralaması
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/Hata/Index");
     app.UseHsts();
 }
 

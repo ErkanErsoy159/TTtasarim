@@ -164,53 +164,5 @@
 </div>
 
 @section Scripts {
-<script>
-    // Tablo sıralama (basit)
-    document.querySelectorAll('th').forEach(header => {
-        header.style.cursor = 'pointer';
-        header.addEventListener('click', function() {
-            const table = this.closest('table');
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            const index = Array.from(this.parentNode.children).indexOf(this);
-            
-            const sortedRows = rows.sort((a, b) => {
-                const aText = a.children[index].textContent.trim();
-                const bText = b.children[index].textContent.trim();
-                return aText.localeCompare(bText, 'tr', { numeric: true });
-            });
-            
-            // Toggle sort direction
-            if (this.classList.contains('sorted-asc')) {
-                sortedRows.reverse();
-                this.classList.remove('sorted-asc');
-                this.classList.add('sorted-desc');
-            } else {
-                this.classList.remove('sorted-desc');
-                this.classList.add('sorted-asc');
-            }
-            
-            // Clear other headers
-            this.parentNode.querySelectorAll('th').forEach(th => {
-                if (th !== this) {
-                    th.classList.remove('sorted-asc', 'sorted-desc');
-                }
-            });
-            
-            // Re-append sorted rows
-            sortedRows.forEach(row => tbody.appendChild(row));
-        });
-    });
-</script>
-
-<style>
-    th.sorted-asc::after {
-        content: ' ↑';
-        color: #007bff;
-    }
-    th.sorted-desc::after {
-        content: ' ↓';
-        color: #007bff;
-    }
-</style>
+<!-- Sıralama işlemleri kaldırıldı -->
 }

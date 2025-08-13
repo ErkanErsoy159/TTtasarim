@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "TTOrtam - Ana Sayfa";
+    var isAuthenticated = Context.Session.GetString("JWT") != null;
 }
 
 <div class="container mt-5">
@@ -117,14 +118,32 @@
                     </div>
                 </div>
                 <div class="col-md-6 mb-4">
-                    <div class="card h-100 border-success">
+                    <div class="card h-100 @(isAuthenticated ? "border-secondary" : "border-success")">
                         <div class="card-body text-center">
-                            <i class="fas fa-sign-in-alt fa-3x text-success mb-3"></i>
-                            <h5>Giriş Yap</h5>
-                            <p class="text-muted">Sisteme giriş yaparak tüm özelliklere erişim sağlayın.</p>
-                            <a href="@Url.Action("Login", "Auth")" class="btn btn-success">
-                                <i class="fas fa-user"></i> Giriş Yap
-                            </a>
+                            <i class="fas @(isAuthenticated ? "fa-user-check" : "fa-sign-in-alt") fa-3x @(isAuthenticated ? "text-secondary" : "text-success") mb-3"></i>
+                            <h5>@(isAuthenticated ? "Giriş Yapıldı" : "Giriş Yap")</h5>
+                            <p class="text-muted">
+                                @if (isAuthenticated)
+                                {
+                                    <span>Sisteme başarıyla giriş yapıldı.</span>
+                                }
+                                else
+                                {
+                                    <span>Sisteme giriş yaparak tüm özelliklere erişim sağlayın.</span>
+                                }
+                            </p>
+                            @if (isAuthenticated)
+                            {
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="fas fa-check"></i> Giriş Yapıldı
+                                </button>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("Login", "Auth")" class="btn btn-success">
+                                    <i class="fas fa-user"></i> Giriş Yap
+                                </a>
+                            }
                         </div>
                     </div>
                 </div>

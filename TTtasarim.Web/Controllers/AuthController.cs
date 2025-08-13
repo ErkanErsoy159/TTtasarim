@@ -52,11 +52,13 @@ namespace TTtasarim.Web.Controllers
             dynamic result = JsonConvert.DeserializeObject(responseContent);
 
             string token = result.token;
+            string username = result.username;
             string role = result.userType;
 
             // Session'a kaydet
             HttpContext.Session.SetString("JWT", token);
-            HttpContext.Session.SetString("UserRole", role); // ROL buraya yazıldı
+            HttpContext.Session.SetString("Username", username);
+            HttpContext.Session.SetString("UserRole", role);
 
             return RedirectToAction("Index", "Dashboard");
         }

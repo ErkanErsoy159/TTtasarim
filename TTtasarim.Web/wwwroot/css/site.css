@@ -20,3 +20,46 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* Kullanıcı dropdown stilleri */
+.navbar-nav .dropdown-menu {
+  margin-top: 0.5rem;
+}
+
+.navbar-nav .dropdown-toggle::after {
+  margin-left: 0.5rem;
+}
+
+.user-dropdown .dropdown-item {
+  padding: 0.5rem 1rem;
+}
+
+.user-dropdown .dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.user-dropdown .dropdown-item.text-danger:hover {
+  background-color: #dc3545;
+  color: white !important;
+}
+
+/* Disabled button stilleri */
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-secondary:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: #fff;
+}
+
+/* Giriş yapıldı durumu için özel stiller */
+.card.border-secondary .card-body {
+  background-color: #f8f9fa;
+}
+
+.card.border-secondary .text-secondary {
+  color: #6c757d !important;
+}
